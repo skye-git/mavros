@@ -65,5 +65,11 @@
 	<class name="altitude" type="mavplugin::AltitudePlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish altitude values</description>
 	</class>
+
+	<!-- Skye harware in the loop -->
+	<class name="skye_attitude_ctr_output_pub" type="mavplugin::IMUPubPlugin" base_class_type="mavplugin::MavRosPlugin">
+		<description>Publish Skye's attitude control output.</description>
+	</class>
+
 </library>
 
