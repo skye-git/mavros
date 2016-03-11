@@ -67,7 +67,7 @@
 	</class>
 
 	<!-- Skye harware in the loop -->
-	<class name="skye_attitude_ctr_output_pub" type="mavplugin::IMUPubPlugin" base_class_type="mavplugin::MavRosPlugin">
+	<class name="skye_attitude_ctr_output_pub" type="mavplugin::SkyeAttCtrPubPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish Skye's attitude control output.</description>
 	</class>
 

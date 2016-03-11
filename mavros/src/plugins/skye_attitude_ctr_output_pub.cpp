@@ -8,10 +8,11 @@
  */
 
 #include <cmath>
+
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
-#include <eigen_conversions/eigen_msg.h>
 
+#include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3.h>
 
 namespace mavplugin {
@@ -24,19 +25,20 @@ public:
 	SkyeAttCtrPubPlugin() :
 		skye_att_ctr_nh("~"),
 		uas(nullptr)
-	{ };
+	{};
 
 	void initialize(UAS &uas_)
 	{
 		uas = &uas_;
 
-
 		torque_pub = skye_att_ctr_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
+
+		ROS_INFO_NAMED("SKYEEEEEEE", "initialize");
 	}
 
 	const message_map get_rx_handlers() {
 		return {
-			       MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeAttCtrPubPlugin::handle_att_ctrl_out),
+							MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeAttCtrPubPlugin::handle_att_ctrl_out)
 		};
 	}
 
@@ -51,15 +53,18 @@ private:
 
 	void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) 
 	{
+
+		ROS_INFO("Skye!!!!");
+
     mavlink_attitude_ctrl_output_t attiude_ctrl_output;
     mavlink_msg_attitude_ctrl_output_decode(msg, &attiude_ctrl_output);
 
     auto vector3_msg = boost::make_shared<geometry_msgs::Vector3>();
-    //vector3_msg->header = uas->synchronized_header(frame_id, attiude_ctrl_output.time_usec);
     
     // fill
-		//vector3_msg->header = uas->synchronized_header(frame_id, time_boot_ms);
-		tf::vectorEigenToMsg(torque, vector3_msg);
+		vector3_msg->x	=	attiude_ctrl_output.M_x;
+		vector3_msg->y	=	attiude_ctrl_output.M_y;
+		vector3_msg->z	=	attiude_ctrl_output.M_z;
 
 		// publish
 		torque_pub.publish(vector3_msg);

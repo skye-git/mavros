@@ -112,6 +112,7 @@ add_library(mavros_plugins
   src/plugins/actuator_control.cpp
   src/plugins/manual_control.cpp
   src/plugins/altitude.cpp
+  src/plugins/skye_attitude_ctr_output_pub.cpp #Skye 
 )
 add_dependencies(mavros_plugins
   mavros
