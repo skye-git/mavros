@@ -9,11 +9,15 @@
 
 #include <cmath>
 
+//test
+#include </home/marco/skye-git/c_library/skye/mavlink.h>
+
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3.h>
+	
 
 namespace mavplugin {
 
@@ -33,7 +37,7 @@ public:
 
 		torque_pub = skye_att_ctr_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
 
-		ROS_INFO_NAMED("SKYEEEEEEE", "initialize");
+		ROS_INFO("*********************** Initi Skye! ***************************");
 	}
 
 	const message_map get_rx_handlers() {
@@ -54,7 +58,7 @@ private:
 	void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) 
 	{
 
-		ROS_INFO("Skye!!!!");
+		ROS_INFO("*********************** Skye!!!! ***************************");
 
     mavlink_attitude_ctrl_output_t attiude_ctrl_output;
     mavlink_msg_attitude_ctrl_output_decode(msg, &attiude_ctrl_output);

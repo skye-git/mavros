@@ -22,6 +22,7 @@
 # warning "No MAVLINK_DIALECT specified. fallback to " MAVLINK_DIALECT
 #endif
 
+
 /* Do not use default inlined mavlink functions!
  * Issue #269
  */
@@ -52,13 +53,14 @@ extern "C" mavlink_message_t* mavlink_get_channel_buffer(uint8_t chan);
 #define _DIALECT_sensesoar	10	/* removed */
 #define _DIALECT_ASLUAV		11
 #define _DIALECT_paparazzi	12
+#define _DIALECT_skye 33  /* Skye */
 
 #  if _DIALECT(MAVLINK_DIALECT) == _DIALECT_ardupilotmega
 #  include <mavlink/v1.0/ardupilotmega/mavlink.h>
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_autoquad
 #  include <mavlink/v1.0/autoquad/mavlink.h>
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_common
-#  include <mavlink/v1.0/common/mavlink.h>
+#  include <mavlink/v1.0/common/mavlink.h> 
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_matrixpilot
 #  include <mavlink/v1.0/matrixpilot/mavlink.h>
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_minimal
@@ -77,6 +79,8 @@ extern "C" mavlink_message_t* mavlink_get_channel_buffer(uint8_t chan);
 #  include <mavlink/v1.0/ASLUAV/mavlink.h>
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_paparazzi
 #  include <mavlink/v1.0/paparazzi/mavlink.h>
+//#elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_skye /* Skye */
+//#  include "/home/marco/skye-git/c_library/skye/mavlink.h"   /* Skye_TEST */
 #else
 #  error "Unknown MAVLINK_DIALECT"
 #endif

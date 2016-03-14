@@ -72,6 +72,10 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
 )
 
+### TEST 
+#message( "-----***** mavlink_INCLUDE_DIRS: ${mavlink_INCLUDE_DIRS} *****-----" )
+### END TEST
+
 add_library(mavros
   src/lib/uas_data.cpp
   src/lib/uas_stringify.cpp
@@ -113,6 +117,7 @@ add_library(mavros_plugins
   src/plugins/manual_control.cpp
   src/plugins/altitude.cpp
   src/plugins/skye_attitude_ctr_output_pub.cpp #Skye 
+  src/plugins/skye_ros_imu.cpp #Skye 
 )
 add_dependencies(mavros_plugins
   mavros
