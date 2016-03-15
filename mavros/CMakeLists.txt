@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosconsole_bridge
   eigen_conversions
   mavros_msgs
+  skye_ros #Skye
 )
 
 ## System dependencies are found with CMake's conventions

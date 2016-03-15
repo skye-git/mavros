@@ -13,6 +13,7 @@
 #include <pluginlib/class_list_macros.h>
 
 #include <sensor_msgs/Imu.h>
+#include <gazebo_msgs/GetLinkState.h>
 	
 
 namespace mavplugin {
@@ -35,6 +36,8 @@ public:
                                                     1,
                                                     boost::bind(&SkyeTalkerPlugin::imu_ned_callback, this, _1));
 
+		client_skye_ros_get_link_state = skye_talker_nh.serviceClient<gazebo_msgs::GetLinkState>("skye_ros/get_link_state_ned");
+
 		ROS_INFO("*********************** Initi SkyeTalkerPlugin! ***************************");
 	}
 
@@ -49,6 +52,7 @@ private:
 	UAS *uas;
 
 	ros::Subscriber skye_ros_imu_ned_sub;
+	ros::ServiceClient client_skye_ros_get_link_state;
 
 	/* -*- message handlers -*- */
 	void handle_heartbeat(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) {
@@ -58,6 +62,19 @@ private:
 
 	void imu_ned_callback(const sensor_msgs::ImuConstPtr &imu_ned_p) {
 		ROS_INFO("****************** SkyeTalkerPlugin: imu ned from skye ros ********");
+
+		/* For now use perfect information taken from Gazebo about the state of Skye. 
+		 * Use skye_ros/sensor_msgs/imu_ned only for timing.
+		 * Call the service skye_ros/get_link_state_ned from package skye_ros
+		 * and read the state of Skye's hull.
+		*/
+
+
+
+		/* Use message vehicle_attitude_hil which has the same fields of the original
+		 * vehicle_attiude topic. Fill it with the information from Gazebo.
+		*/
+
 	}
 };
 };	// namespace mavplugin
