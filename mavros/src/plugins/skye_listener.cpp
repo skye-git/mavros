@@ -1,6 +1,6 @@
 /**
- * @brief Skye attitude controller plugin
- * @file skye_attitude_ctr_output_pub.cpp
+ * @brief Read data from Skye's Firmware running on PX4 and publish them in ROS.
+ * @file skye_listner.cpp
  * @author Marco Tranzatto <marco@aerotainment.com>
  *
  * @addtogroup plugin
@@ -9,7 +9,7 @@
 
 #include <cmath>
 
-//test
+//test - better to include this in the CMakeLists.txt file of Mavros
 #include </home/marco/skye-git/c_library/skye/mavlink.h>
 
 #include <mavros/mavros_plugin.h>
@@ -22,12 +22,12 @@
 namespace mavplugin {
 
 /**
- * @brief Skye attitude controller output data publication plugin
+ * @brief Read data from Skye's Firmware running on PX4 and publish them in ROS.
  */
-class SkyeAttCtrPubPlugin : public MavRosPlugin {
+class SkyeListenerPlugin : public MavRosPlugin {
 public:
-	SkyeAttCtrPubPlugin() :
-		skye_att_ctr_nh("~"),
+	SkyeListenerPlugin() :
+		skye_listner_nh("~"),
 		uas(nullptr)
 	{};
 
@@ -35,19 +35,19 @@ public:
 	{
 		uas = &uas_;
 
-		torque_pub = skye_att_ctr_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
+		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
 
-		ROS_INFO("*********************** Initi Skye! ***************************");
+		ROS_INFO("*********************** Initi SkyeListenerPlugin! ***************************");
 	}
 
 	const message_map get_rx_handlers() {
 		return {
-							MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeAttCtrPubPlugin::handle_att_ctrl_out)
+							MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeListenerPlugin::handle_att_ctrl_out)
 		};
 	}
 
 private:
-	ros::NodeHandle skye_att_ctr_nh;
+	ros::NodeHandle skye_listner_nh;
 	UAS *uas;
 	std::string frame_id;
 
@@ -58,7 +58,7 @@ private:
 	void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) 
 	{
 
-		ROS_INFO("*********************** Skye!!!! ***************************");
+		ROS_INFO("*********************** SkyeListenerPlugin!!!! ***************************");
 
     mavlink_attitude_ctrl_output_t attiude_ctrl_output;
     mavlink_msg_attitude_ctrl_output_decode(msg, &attiude_ctrl_output);
@@ -76,5 +76,5 @@ private:
 };
 };	// namespace mavplugin
 
-PLUGINLIB_EXPORT_CLASS(mavplugin::SkyeAttCtrPubPlugin, mavplugin::MavRosPlugin)
+PLUGINLIB_EXPORT_CLASS(mavplugin::SkyeListenerPlugin, mavplugin::MavRosPlugin)
 
