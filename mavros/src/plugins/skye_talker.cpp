@@ -9,13 +9,15 @@
 
 #include <cmath>
 
+//test - better to include this in the CMakeLists.txt file of Mavros
+#include </home/marco/skye-git/c_library/skye/mavlink.h>
+
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
 #include <tf_conversions/tf_eigen.h>
 
 #include <sensor_msgs/Imu.h>
-#include <skye_ros/GetLinkStateNed.h>
 	
 
 namespace mavplugin {
@@ -38,8 +40,6 @@ public:
 																										10, 
 																										&SkyeTalkerPlugin::imu_ned_callback, this);
 
-		client_skye_ros_get_link_state = skye_talker_nh.serviceClient<skye_ros::GetLinkStateNed>("/skye_ros/get_link_state_ned");
-
 		ROS_INFO("*********************** Initi SkyeTalkerPlugin! ***************************");
 	}
 
@@ -52,53 +52,39 @@ private:
 	UAS *uas;
 
 	ros::Subscriber skye_ros_imu_ned_sub;
-	ros::ServiceClient client_skye_ros_get_link_state;
 
 	/* -*- message handlers -*- */
 	void imu_ned_callback(const sensor_msgs::ImuConstPtr &imu_ned_p) {
-		//ROS_INFO("****************** SkyeTalkerPlugin: imu ned from skye ros ********");
 
-		/* For now use perfect information taken from Gazebo about the state of Skye. 
-		 * Use skye_ros/sensor_msgs/imu_ned only for timing.
-		 */
-		skye_ros::GetLinkStateNed srv;
 		mavlink_message_t msg;
-		Eigen::Quaterniond q_skye; /* Orientation of Skye's NED frame in Gazebo NED fixed frame. */
+		Eigen::Quaterniond q_imu; 
 		tf::Quaternion tf_quat;
+		float roll, pitch, yaw;
+		float q[4];
 
-		/* Call the service skye_ros/get_link_state_ned from package skye_ros
-		 * and read the state of Skye's hull.
-		 */
-		srv.request.link_name = "hull"; /**< @todo remove this hard coded name. */
+		/* Convert data to fullfill a mavlink message. */
+	  tf::quaternionMsgToTF(imu_ned_p->orientation, tf_quat);
+	  tf::quaternionTFToEigen(tf_quat, q_imu);
+	  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
+	  roll = static_cast<float>(euler_angles[2]);
+	  pitch = static_cast<float>(euler_angles[1]);
+	  yaw = static_cast<float>(euler_angles[0]);
 
-		if(!client_skye_ros_get_link_state.call(srv))
-	  {
-    	ROS_ERROR("Failed to call service get_link_state_ned from skye_ros pkg.");
-      return;
-	  }
+	  q[0] = static_cast<float>(q_imu.w());
+	  q[1] = static_cast<float>(q_imu.x());
+	  q[2] = static_cast<float>(q_imu.y());
+	  q[3] = static_cast<float>(q_imu.z());
 
-		/* Use message vehicle_attitude_hil which has the same fields of the original
-		 * vehicle_attiude topic. Fill it with the information from Gazebo.
-		 */ 
-		q_skye.w() = srv.response.link_state.pose.orientation.w;
-		q_skye.x() = srv.response.link_state.pose.orientation.x;
-		q_skye.y() = srv.response.link_state.pose.orientation.y;
-		q_skye.z() = srv.response.link_state.pose.orientation.z;
-	  /*tf::quaternionMsgToTF(srv.response.link_state.pose.orientation, tf_quat);
-	  tf::quaternionTFToEigen(tf_quat, q_skye);*/
-
-	  //debug
-	  /*Eigen::Vector3d ea = q_skye.matrix().eulerAngles(2, 1, 0);
-	  ROS_INFO("q.w: %f\tq.x: %f\tq.y: %f\tq.z: %f\nyaw: %f\tpitch: %f\t roll: %f\n", 
-	  					q_skye.w(), q_skye.x(), q_skye.y(), q_skye.z(),
-	  					ea[0] * 180 / M_PI, ea[1] * 180 / M_PI, ea[2] * 180 / M_PI);*/
-	  ROS_INFO("rr: %f\tpr: %f\tyr: %f", srv.response.link_state.twist.angular.x,
-	  																	 srv.response.link_state.twist.angular.y,
-	  																	 srv.response.link_state.twist.angular.z);
-		/* Send the vehicle_attitude_hil message to Skye. */
-
-		//mavlink_msg_TODO_pack_chan(UAS_PACK_CHAN(uas), &msg, TODO );
-		//UAS_FCU(uas)->send_message(&msg);
+		/* Send the skye_imu_attitude_hil message to Skye. */
+		mavlink_msg_skye_imu_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg, 
+																								roll,
+																								pitch,
+																								yaw,
+																								imu_ned_p->angular_velocity.x,
+																								imu_ned_p->angular_velocity.y,
+																								imu_ned_p->angular_velocity.z,
+																								q);
+		UAS_FCU(uas)->send_message(&msg);
 
 	}
 };

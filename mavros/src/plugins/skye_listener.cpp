@@ -17,6 +17,8 @@
 
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3.h>
+
+#include "skye_ros/ApplyWrenchCogNed.h"
 	
 
 namespace mavplugin {
@@ -37,6 +39,8 @@ public:
 
 		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
 
+    client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogNed>("/skye_ros/apply_wrench_cog_ned");
+
 		ROS_INFO("*********************** Initi SkyeListenerPlugin! ***************************");
 	}
 
@@ -54,6 +58,7 @@ private:
 
 	ros::Publisher torque_pub;	/*< attitide controller output torque in to be applied in the CoG. */
 	ros::Publisher allocation_output_pub;	/*< allocator output thrust and angle for every AU. */
+  ros::ServiceClient  client_skye_ros_apply_wrench; /**< Client to apply a body wrench in using skye_ros. */
 
 	/* -*- message handlers -*- */
 
@@ -74,6 +79,30 @@ private:
 
 		// publish
 		torque_pub.publish(vector3_msg);
+
+    // apply the torque to Gazebo using skye_ros interface
+    skye_ros::ApplyWrenchCogNed  srv;
+
+    srv.request.wrench.force.x = 0.0;
+    srv.request.wrench.force.y = 0.0;
+    srv.request.wrench.force.z = 0.0;
+
+    srv.request.wrench.torque.x = attiude_ctrl_output.M_x;
+    srv.request.wrench.torque.y = attiude_ctrl_output.M_y;
+    srv.request.wrench.torque.z = attiude_ctrl_output.M_z;
+
+    srv.request.start_time = ros::Time::now();
+    srv.request.duration = ros::Duration(-1); //apply wrench till new data from Skye has been received
+                                      
+    if (client_skye_ros_apply_wrench.call(srv))
+    {
+      //ROS_INFO("wrench applied!");
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service /skye_ros/apply_wrench_cog_ned from skye_ros pkg");
+    }
+
   }
 
   void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) 
