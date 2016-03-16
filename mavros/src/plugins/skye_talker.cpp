@@ -76,7 +76,7 @@ private:
 	  q[3] = static_cast<float>(q_imu.z());
 
 		/* Send the skye_imu_attitude_hil message to Skye. */
-		mavlink_msg_skye_imu_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg, 
+		/*mavlink_msg_skye_imu_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg, 
 																								roll,
 																								pitch,
 																								yaw,
@@ -84,7 +84,7 @@ private:
 																								imu_ned_p->angular_velocity.y,
 																								imu_ned_p->angular_velocity.z,
 																								q);
-		UAS_FCU(uas)->send_message(&msg);
+		UAS_FCU(uas)->send_message(&msg);*/
 
 	}
 };

@@ -94,14 +94,14 @@ private:
     srv.request.start_time = ros::Time::now();
     srv.request.duration = ros::Duration(-1); //apply wrench till new data from Skye has been received
                                       
-    if (client_skye_ros_apply_wrench.call(srv))
+    /*if (client_skye_ros_apply_wrench.call(srv))
     {
       //ROS_INFO("wrench applied!");
     }
     else
     {
       ROS_ERROR("Failed to call service /skye_ros/apply_wrench_cog_ned from skye_ros pkg");
-    }
+    }*/
 
   }
 
