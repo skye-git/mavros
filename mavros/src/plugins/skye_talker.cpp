@@ -9,9 +9,6 @@
 
 #include <cmath>
 
-//test - better to include this in the CMakeLists.txt file of Mavros
-#include </home/marco/skye-git/c_library/skye/mavlink.h>
-
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
@@ -40,7 +37,6 @@ public:
 																										10, 
 																										&SkyeTalkerPlugin::imu_ned_callback, this);
 
-		ROS_INFO("*********************** Initi SkyeTalkerPlugin! ***************************");
 	}
 
 	const message_map get_rx_handlers() {
@@ -75,6 +71,7 @@ private:
 	  q[2] = static_cast<float>(q_imu.y());
 	  q[3] = static_cast<float>(q_imu.z());
 
+	  int i = 0;
 		/* Send the skye_imu_attitude_hil message to Skye. */
 		/*mavlink_msg_skye_imu_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg, 
 																								roll,

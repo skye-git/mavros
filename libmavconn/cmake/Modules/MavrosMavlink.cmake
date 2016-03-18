@@ -5,18 +5,14 @@ find_package(mavlink REQUIRED)
 
 # fallback for older mavlink package.
 if (NOT DEFINED mavlink_DIALECTS)
-  message( "***---***---*** mavlink_DIALECTS NOT defined ***---***---***" ) #DEBUG Skye
   list(APPEND mavlink_DIALECTS "ardupilotmega")
   list(APPEND mavlink_DIALECTS "common")
 endif ()
 
-message( "***---***---*** mavlink_DIALECTS Defined ***---***---***" ) #DEBUG Skye
 
 # Select MAVLink dialect
 set(MAVLINK_DIALECT "ardupilotmega" CACHE STRING "MAVLink dialect selector") 
 set_property(CACHE MAVLINK_DIALECT PROPERTY STRINGS ${mavlink_DIALECTS})
-
-message( "***---***---*** mavlink_DIALECTS: ${mavlink_DIALECTS} ***---***---***" ) #DEBUG Skye
 
 # check that selected dialect are known
 set(MAVLINK_DIALECT_KNOWN)

@@ -9,9 +9,6 @@
 
 #include <cmath>
 
-//test - better to include this in the CMakeLists.txt file of Mavros
-#include </home/marco/skye-git/c_library/skye/mavlink.h>
-
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 
@@ -40,8 +37,6 @@ public:
 		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
 
     client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogNed>("/skye_ros/apply_wrench_cog_ned");
-
-		ROS_INFO("*********************** Initi SkyeListenerPlugin! ***************************");
 	}
 
 	const message_map get_rx_handlers() {

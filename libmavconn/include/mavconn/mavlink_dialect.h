@@ -79,8 +79,8 @@ extern "C" mavlink_message_t* mavlink_get_channel_buffer(uint8_t chan);
 #  include <mavlink/v1.0/ASLUAV/mavlink.h>
 #elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_paparazzi
 #  include <mavlink/v1.0/paparazzi/mavlink.h>
-//#elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_skye /* Skye */
-//#  include "/home/marco/skye-git/c_library/skye/mavlink.h"   /* Skye_TEST */
+#elif _DIALECT(MAVLINK_DIALECT) == _DIALECT_skye /* Skye */
+#  include <mavlink/v1.0/skye/mavlink.h>   
 #else
 #  error "Unknown MAVLINK_DIALECT"
 #endif
