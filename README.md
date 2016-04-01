@@ -70,8 +70,8 @@ sudo apt-get install python-wstool python-rosinstall-generator python-catkin-too
 ```
 First get the most recent copy of Skye's dialect:
 ```bash
-mkdir -p ~/skye-git/mavlink
-cd ~/skye-git/mavlink
+mkdir -p ~/skye-git
+cd ~/skye-git
 git clone https://github.com/skye-git/mavlink
 ```
 Now you're ready to get a copy of the source file of mavlink-ros package:
