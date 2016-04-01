@@ -15,7 +15,7 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3.h>
 
-#include "skye_ros/ApplyWrenchCogNed.h"
+#include "skye_ros/ApplyWrenchCogBf.h"
 	
 
 namespace mavplugin {
@@ -36,7 +36,7 @@ public:
 
 		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3>("/skye/attitude_ctrl_output", 10);
 
-    client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogNed>("/skye_ros/apply_wrench_cog_ned");
+    client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogBf>("/skye_ros/apply_wrench_cog_bf");
 	}
 
 	const message_map get_rx_handlers() {
@@ -76,7 +76,7 @@ private:
 		torque_pub.publish(vector3_msg);
 
     // apply the torque to Gazebo using skye_ros interface
-    skye_ros::ApplyWrenchCogNed  srv;
+    skye_ros::ApplyWrenchCogBf  srv;
 
     srv.request.wrench.force.x = 0.0;
     srv.request.wrench.force.y = 0.0;

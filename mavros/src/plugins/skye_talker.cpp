@@ -33,9 +33,9 @@ public:
 	{
 		uas = &uas_;
 
-		skye_ros_imu_ned_sub = skye_talker_nh.subscribe("/skye_ros/sensor_msgs/imu_ned", 
+		skye_ros_imu_bf_sub = skye_talker_nh.subscribe("/skye_ros/sensor_msgs/imu_bf", 
 																										10, 
-																										&SkyeTalkerPlugin::imu_ned_callback, this);
+																										&SkyeTalkerPlugin::imu_bf_callback, this);
 
 	}
 
@@ -47,10 +47,10 @@ private:
 	ros::NodeHandle skye_talker_nh;
 	UAS *uas;
 
-	ros::Subscriber skye_ros_imu_ned_sub;
+	ros::Subscriber skye_ros_imu_bf_sub;
 
 	/* -*- message handlers -*- */
-	void imu_ned_callback(const sensor_msgs::ImuConstPtr &imu_ned_p) {
+	void imu_bf_callback(const sensor_msgs::ImuConstPtr &imu_bf_p) {
 
 		mavlink_message_t msg;
 		Eigen::Quaterniond q_imu; 
@@ -59,7 +59,7 @@ private:
 		float q[4];
 
 		/* Convert data to fullfill a mavlink message. */
-	  tf::quaternionMsgToTF(imu_ned_p->orientation, tf_quat);
+	  tf::quaternionMsgToTF(imu_bf_p->orientation, tf_quat);
 	  tf::quaternionTFToEigen(tf_quat, q_imu);
 	  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
 	  roll = static_cast<float>(euler_angles[2]);
@@ -77,9 +77,9 @@ private:
 																								roll,
 																								pitch,
 																								yaw,
-																								imu_ned_p->angular_velocity.x,
-																								imu_ned_p->angular_velocity.y,
-																								imu_ned_p->angular_velocity.z,
+																								imu_bfd_p->angular_velocity.x,
+																								imu_bf_p->angular_velocity.y,
+																								imu_bf_p->angular_velocity.z,
 																								q);
 		UAS_FCU(uas)->send_message(&msg);*/
 
