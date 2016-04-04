@@ -106,4 +106,10 @@ cd ~/catkin_ws
 catkin_make --cmake-args -DMAVLINK_DIALECT=skye
 ```
 
+#### Troubleshooting
+In case of `CMake Error: Could not find a package configuration file provided by "control_toolbox"`, please install the following packages:
+```bash
+sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
+```
+
 
