@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="fcu_url" default="/dev/ttyUSB0:115200"/>
+  <arg name="gcs_url" default="udp://14555@localhost:14550"/>
+
+  <arg name="paused" default="true"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/> 
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <!-- Inflate Skye in Gazebo -->
+  <include file="$(find skye_ros)/launch/inflate_skye.launch">
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include> 
+
+  <!-- Start "mavros_node"  fro px4 fmu -->
+  <include file="$(find mavros)/launch/px4.launch">
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+    <arg name="gcs_url" value="$(arg gcs_url)" />
+  </include> 
+
+</launch>
