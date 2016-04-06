@@ -36,8 +36,10 @@ public:
 		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
 
     client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogBf>("/skye_ros/apply_wrench_cog_bf");
-	
-    //frame_id = "body_frame";//not sure if required
+	  /* Wait fort service to be advertised and available. */
+    /*if(!client_skye_ros_apply_wrench.waitForExistence(ros::Duration(60.0))){
+      ROS_FATAL("Service ApplyWrenchCogBf not advertised. Timeout reached, close application.");
+    }*/
     seq_id = 0;
   }
 
@@ -91,8 +93,8 @@ private:
     srv.request.wrench.torque.z = attiude_ctrl_output.M_z;
 
     srv.request.start_time = ros::Time::now();
-    srv.request.duration = ros::Duration(-1); //apply wrench till new data from Skye has been received
-    //srv.request.duration = ros::Duration(1.0);//TEST      
+    //srv.request.duration = ros::Duration(-1); //<--- causes problems
+    srv.request.duration = ros::Duration(0.1);//TEST  this one works!    
                                                                     
     if (client_skye_ros_apply_wrench.call(srv))
     {
@@ -100,7 +102,7 @@ private:
     }
     else
     {
-      ROS_ERROR("Failed to call service /skye_ros/apply_wrench_cog_bf from skye_ros pkg");
+      ROS_ERROR("[skye_listener] Failed to call service /skye_ros/apply_wrench_cog_bf from skye_ros pkg");
     }
 
   }

@@ -12,7 +12,6 @@
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
-#include <tf_conversions/tf_eigen.h>
 
 #include <sensor_msgs/Imu.h>
 	
@@ -54,7 +53,6 @@ private:
 
 		mavlink_message_t msg;
 		Eigen::Quaterniond q_imu; 
-		tf::Quaternion tf_quat;
 		float roll, pitch, yaw;
 		float rollspeed, pitchspeed, yawspeed;
 		float q[4];
