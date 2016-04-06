@@ -78,13 +78,6 @@ private:
 
 		// publish
 		torque_pub.publish(vector3_msg);
-
-    //Debug
-    ROS_INFO("***** seq[%d] att_ctrl_out: %f,\t%f,\t%f\t",  seq_id,
-                                                            vector3_msg->vector.x,
-                                                            vector3_msg->vector.y,
-                                                            vector3_msg->vector.z);
-    //End Debug 
     
     // apply the torque to Gazebo using skye_ros interface
     skye_ros::ApplyWrenchCogBf  srv;
@@ -99,15 +92,16 @@ private:
 
     srv.request.start_time = ros::Time::now();
     srv.request.duration = ros::Duration(-1); //apply wrench till new data from Skye has been received
-                                      
-    /*if (client_skye_ros_apply_wrench.call(srv))
+    //srv.request.duration = ros::Duration(1.0);//TEST      
+                                                                    
+    if (client_skye_ros_apply_wrench.call(srv))
     {
       //ROS_INFO("wrench applied!");
     }
     else
     {
-      ROS_ERROR("Failed to call service /skye_ros/apply_wrench_cog_ned from skye_ros pkg");
-    }*/
+      ROS_ERROR("Failed to call service /skye_ros/apply_wrench_cog_bf from skye_ros pkg");
+    }
 
   }
 

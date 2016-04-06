@@ -92,7 +92,6 @@ private:
 																						yawspeed,
 																						q);
 		UAS_FCU(uas)->send_message(&msg);
-
 	}
 };
 };	// namespace mavplugin
