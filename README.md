@@ -5,30 +5,23 @@ MAVROS
 
 MAVLink extendable communication node for ROS.
 
-- Since 2014-08-11 this repository contains several packages.
-- Since 2014-11-02 hydro support splited from master to hydro-devel branch.
-- Since 2015-03-04 all packages also dual licensed under terms of BSD license.
-- Since 2015-08-10 all messages moved to mavros\_msgs package
-- Since 2016-02-05 (v0.17) frame conversion changed again
-
 
 mavros package
 --------------
 
-It is the main package, please see it's [README][mrrm].
-Here you may read [installation instructions][inst].
+It is the main package, please see it's README.
 
 
 mavros\_extras package
 ----------------------
 
-This package contain some extra nodes and plugins for mavros, please see it's [README][exrm].
+This package contain some extra nodes and plugins for mavros, please see it's README.
 
 
 libmavconn package
 ------------------
 
-This package contain mavconn library, see it's [README][libmc].
+This package contain mavconn library, see it's README.
 LibMAVConn may be used outside of ROS environment.
 
 
@@ -72,7 +65,7 @@ First get the most recent copy of Skye's dialect:
 ```bash
 mkdir -p ~/skye-git
 cd ~/skye-git
-git clone https://github.com/skye-git/mavlink
+git clone https://github.com/skye-git/mavlink -b skye_hil
 ```
 Now you're ready to get a copy of the source file of mavlink-ros package:
 ```bash
