@@ -13,7 +13,8 @@
 
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3Stamped.h>
-
+#include "mavros/skye_base.h"
+  
 #include "skye_ros/ApplyWrenchCogBf.h"
 	
 
@@ -32,10 +33,6 @@ public:
 	void initialize(UAS &uas_)
 	{
 		uas = &uas_;
-
-		torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
-
-    client_skye_ros_apply_wrench = skye_listner_nh.serviceClient<skye_ros::ApplyWrenchCogBf>("/skye_ros/apply_wrench_cog_bf");
 	  /* Wait fort service to be advertised and available. */
     /*if(!client_skye_ros_apply_wrench.waitForExistence(ros::Duration(60.0))){
       ROS_FATAL("Service ApplyWrenchCogBf not advertised. Timeout reached, close application.");
@@ -53,7 +50,7 @@ public:
 private:
 	ros::NodeHandle skye_listner_nh;
 	UAS *uas;
-	//std::string frame_id;
+	skye_base::SkyeBase skye_base; // simple interface to interact with Skye simulation in Gazebo
   int seq_id;
 
 	ros::Publisher torque_pub;	/*< attitide controller output torque in to be applied in the CoG. */
@@ -96,13 +93,13 @@ private:
     //srv.request.duration = ros::Duration(-1); //<--- causes problems
     srv.request.duration = ros::Duration(0.1);//TEST  this one works!    
                                                                     
-    if (client_skye_ros_apply_wrench.call(srv))
+    if (skye_base.setBodyWrench(srv))
     {
       //ROS_INFO("wrench applied!");
     }
     else
     {
-      ROS_ERROR("[skye_listener] Failed to call service /skye_ros/apply_wrench_cog_bf from skye_ros pkg");
+      ROS_ERROR("[skye_listener] Failed to apply body wrench");
     }
 
   }

@@ -87,6 +87,7 @@ add_library(mavros
   src/lib/mavros.cpp
   src/lib/mavlink_diag.cpp
   src/lib/rosconsole_bridge.cpp
+  src/lib/skye_base.cpp #Skye
 )
 target_link_libraries(mavros
   ${catkin_LIBRARIES}

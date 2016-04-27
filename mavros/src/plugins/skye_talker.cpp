@@ -12,6 +12,7 @@
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
+#include "mavros/skye_base.h"
 
 #include <sensor_msgs/Imu.h>
 	
@@ -32,9 +33,9 @@ public:
 	{
 		uas = &uas_;
 
-		skye_ros_imu_sk_sub = skye_talker_nh.subscribe("/skye_ros/sensor_msgs/imu_sk", 
-																										10, 
-																										&SkyeTalkerPlugin::imu_sk_callback, this);
+		skye_ros_imu_sk_sub = skye_talker_nh.subscribe(skye_base.getImuTopicName(), 
+																									 10, 
+																									 &SkyeTalkerPlugin::imu_sk_callback, this);
 
 	}
 
@@ -45,7 +46,7 @@ public:
 private:
 	ros::NodeHandle skye_talker_nh;
 	UAS *uas;
-
+	skye_base::SkyeBase skye_base; // simple interface to interact with Skye simulation in Gazebo
 	ros::Subscriber skye_ros_imu_sk_sub;
 
 	/* -*- message handlers -*- */

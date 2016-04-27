@@ -25,4 +25,7 @@
     <arg name="gcs_url" value="$(arg gcs_url)" />
   </include> 
 
+  <!-- Load paramters from file -->
+  <rosparam command="load" file="$(find mavors)/skye_mavros.yaml"/>
+
 </launch>
