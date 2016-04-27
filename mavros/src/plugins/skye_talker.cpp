@@ -13,6 +13,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
 #include "mavros/skye_base.h"
+#include <ros/console.h>
 
 #include <sensor_msgs/Imu.h>
 	
@@ -27,16 +28,20 @@ public:
 	SkyeTalkerPlugin() :
 		skye_talker_nh("~"),
 		uas(nullptr)
-	{};
+	{}
 
 	void initialize(UAS &uas_)
 	{
 		uas = &uas_;
 
-		skye_ros_imu_sk_sub = skye_talker_nh.subscribe(skye_base.getImuTopicName(), 
-																									 10, 
-																									 &SkyeTalkerPlugin::imu_sk_callback, this);
+		ROS_INFO(" -------------- Sempre e cmq Maremma maiala!");
+		/*skye_talker_nh.getParam("topic_imu_skye", topic_imu_skye_);
 
+		ROS_INFO_STREAM("--------- topic_imu_skye_: " << topic_imu_skye_);
+
+		skye_ros_imu_sk_sub = skye_talker_nh.subscribe("/skye_ros/sensor_msgs/imu_sk", 
+																									 10, 
+																									 &SkyeTalkerPlugin::imu_sk_callback, this);*/
 	}
 
 	const message_map get_rx_handlers() {
@@ -46,8 +51,9 @@ public:
 private:
 	ros::NodeHandle skye_talker_nh;
 	UAS *uas;
-	skye_base::SkyeBase skye_base; // simple interface to interact with Skye simulation in Gazebo
 	ros::Subscriber skye_ros_imu_sk_sub;
+	std::string topic_imu_skye_; // topic of IMU data in Skye's IMU frame
+	skye_base::SkyeBase skye_base;
 
 	/* -*- message handlers -*- */
 	void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p) {
@@ -91,6 +97,8 @@ private:
 																						yawspeed,
 																						q);
 		UAS_FCU(uas)->send_message(&msg);
+
+		ROS_INFO(" ********************* Sent to FCU");
 	}
 };
 };	// namespace mavplugin

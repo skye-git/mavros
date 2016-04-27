@@ -1,4 +1,0 @@
-topic_imu_skye: skye_ros/sensor_msgs/imu_sk #IMU data published in Skye's IMU frame
-au_number: 4
-au_base_name_gazebo: au_ 
-hull_name_gz: hull

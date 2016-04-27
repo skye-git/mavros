@@ -13,10 +13,11 @@
 
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3Stamped.h>
+
 #include "mavros/skye_base.h"
-  
 #include "skye_ros/ApplyWrenchCogBf.h"
-	
+
+#define DEG_TO_RAD M_PI / 180.0	
 
 namespace mavplugin {
 
@@ -33,10 +34,7 @@ public:
 	void initialize(UAS &uas_)
 	{
 		uas = &uas_;
-	  /* Wait fort service to be advertised and available. */
-    /*if(!client_skye_ros_apply_wrench.waitForExistence(ros::Duration(60.0))){
-      ROS_FATAL("Service ApplyWrenchCogBf not advertised. Timeout reached, close application.");
-    }*/
+    torque_pub = skye_listner_nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
     seq_id = 0;
   }
 
@@ -50,7 +48,6 @@ public:
 private:
 	ros::NodeHandle skye_listner_nh;
 	UAS *uas;
-	skye_base::SkyeBase skye_base; // simple interface to interact with Skye simulation in Gazebo
   int seq_id;
 
 	ros::Publisher torque_pub;	/*< attitide controller output torque in to be applied in the CoG. */
@@ -91,36 +88,50 @@ private:
 
     srv.request.start_time = ros::Time::now();
     //srv.request.duration = ros::Duration(-1); //<--- causes problems
-    srv.request.duration = ros::Duration(0.1);//TEST  this one works!    
-                                                                    
-    if (skye_base.setBodyWrench(srv))
-    {
-      //ROS_INFO("wrench applied!");
-    }
-    else
-    {
-      ROS_ERROR("[skye_listener] Failed to apply body wrench");
-    }
+    srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!    
+                     
+    // call service if available   
+    //if(skye_base.isBodyWrenchAvail()){                                                             
+      /*if(skye_base.setBodyWrench(srv))
+      {
+        //ROS_INFO("wrench applied!");
+      }
+      else
+      {
+        ROS_ERROR("[skye_listener] Failed to apply body wrench");
+      }*/
+    //}
 
   }
 
   void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) 
 	{
 
-		/*ROS_INFO("*********************** allocator_out!!!! ***************************");
-
-    mavlink_allocation_output_t allocator_output;
+		// Apply a 2D force to each AU based on the output of the allocator
+    /*mavlink_allocation_output_t allocator_output;
     mavlink_msg_allocation_output_decode(msg, &allocator_output);
 
-    auto vector3_msg = boost::make_shared<geometry_msgs::Vector3>();
-    
-    // fill
-		vector3_msg->x	=	attiude_ctrl_output.M_x;
-		vector3_msg->y	=	attiude_ctrl_output.M_y;
-		vector3_msg->z	=	attiude_ctrl_output.M_z;
+    skye_ros::ApplyForce2DCogBf  srv;
 
-		// publish
-		allocation_output_pub.publish(vector3_msg);*/
+    for(int i = 0; i < 6; i++){
+      srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * DEG_TO_RAD);
+      srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * DEG_TO_RAD);
+
+      srv.request.start_time = ros::Time::now();
+      srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
+      // call service if available   
+      if(skye_base.isAuForce2DAvail(i)){                                                             
+        if(skye_base.setAuForce2D(srv, i))
+        {
+          //ROS_INFO("force applied!");
+        }
+        else
+        {
+          ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+        }
+      } 
+    }*/
+    
   }
 };
 };	// namespace mavplugin
