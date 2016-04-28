@@ -2,3 +2,9 @@
 *~
 *.pyc
 core
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
+*.user

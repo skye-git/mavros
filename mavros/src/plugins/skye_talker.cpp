@@ -26,7 +26,7 @@ namespace mavplugin {
 class SkyeTalkerPlugin : public MavRosPlugin {
 public:
 	SkyeTalkerPlugin() :
-		skye_talker_nh("~"),
+		nh("~"),
 		uas(nullptr)
 	{}
 
@@ -34,14 +34,9 @@ public:
 	{
 		uas = &uas_;
 
-		ROS_INFO(" -------------- Sempre e cmq Maremma maiala!");
-		/*skye_talker_nh.getParam("topic_imu_skye", topic_imu_skye_);
-
-		ROS_INFO_STREAM("--------- topic_imu_skye_: " << topic_imu_skye_);
-
-		skye_ros_imu_sk_sub = skye_talker_nh.subscribe("/skye_ros/sensor_msgs/imu_sk", 
-																									 10, 
-																									 &SkyeTalkerPlugin::imu_sk_callback, this);*/
+		skye_ros_imu_sk_sub = nh.subscribe(skye_base.getImuTopicName(), 
+																			 10, 
+																			 &SkyeTalkerPlugin::imu_sk_callback, this);
 	}
 
 	const message_map get_rx_handlers() {
@@ -49,10 +44,9 @@ public:
 	}
 
 private:
-	ros::NodeHandle skye_talker_nh;
+	ros::NodeHandle nh;
 	UAS *uas;
 	ros::Subscriber skye_ros_imu_sk_sub;
-	std::string topic_imu_skye_; // topic of IMU data in Skye's IMU frame
 	skye_base::SkyeBase skye_base;
 
 	/* -*- message handlers -*- */
@@ -88,17 +82,35 @@ private:
 
 		/* Send the skye_attitude_hil message to Skye. */
 		mavlink_msg_skye_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg, 
-																						timestamp,
-																						roll,
-																						pitch,
-																						yaw,
-																						rollspeed,
-																						pitchspeed,
-																						yawspeed,
-																						q);
+                                                                    timestamp,
+                                                                    roll,
+                                                                    pitch,
+                                                                    yaw,
+                                                                    rollspeed,
+                                                                    pitchspeed,
+                                                                    yawspeed,
+                                                                    q);
 		UAS_FCU(uas)->send_message(&msg);
 
-		ROS_INFO(" ********************* Sent to FCU");
+        //test
+        mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                UAS_PACK_TGT(uas),
+                "SKYE_C_MODE",
+                2,
+                MAV_PARAM_TYPE_INT32 //(uint8_t)MAV_PARAM_TYPE_INT32
+                );
+        UAS_FCU(uas)->send_message(&msg);
+        //end test
+
+        //test
+        /*mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                UAS_PACK_TGT(uas),
+                "SKYE_HIL_MODE",
+                1,
+                MAV_PARAM_TYPE_INT32 //(uint8_t)MAV_PARAM_TYPE_INT32
+                );
+        UAS_FCU(uas)->send_message(&msg);*/
+        //end test
 	}
 };
 };	// namespace mavplugin

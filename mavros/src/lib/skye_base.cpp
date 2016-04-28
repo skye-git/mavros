@@ -12,28 +12,23 @@
 namespace skye_base
 {
 
-SkyeBase::SkyeBase() {
+SkyeBase::SkyeBase() : nh_("~") {
 
 
   // Load parameters from yalm file
-  //getConfiguraionParams();
+  getConfiguraionParams();
 
-  ros::NodeHandle *node_handle = new ros::NodeHandle("~");
-
-  node_handle->getParam("topic_imu_skye", topic_imu_skye_);
   ROS_INFO_STREAM("************* topic_imu_skye: " << topic_imu_skye_ << " *************");
-  node_handle->getParam("au_number", au_number_);
   ROS_INFO_STREAM("************* au_number: " << au_number_ << " *************");
 
   // Service clients
-  /*apply_wrench_service_name_ = "/skye_gz/hull/apply_wrench";// TODO "/skye_gz/" + hull_name_ + "/apply_wrench"; 
+  apply_wrench_service_name_ = "/skye_gz/" + hull_name_ + "/apply_wrench"; 
   apply_wrench_hull_cog_ = nh_.serviceClient<skye_ros::ApplyWrenchCogBf>(apply_wrench_service_name_);
 
   for(int i = 0; i < au_number_; i++){
-    apply_au_force_service_name_.push_back("/skye_gz/au_" + std::to_string(i+1) + "/apply_force_2D");
-    // TODO "/skye_gz/" + au_base_name_ + std::to_string(i+1) + "/apply_force_2D");
+    apply_au_force_service_name_.push_back("/skye_gz/" + au_base_name_ + std::to_string(i+1) + "/apply_force_2D");
     apply_au_force_2d_.push_back(nh_.serviceClient<skye_ros::ApplyForce2DCogBf>(apply_au_force_service_name_[i]));
-  }*/
+  }
   
 }
 
@@ -84,7 +79,7 @@ bool SkyeBase::isAuForce2DAvail(const int &au_index){
   return ros::service::exists(apply_au_force_service_name_.at(au_index), false);
 }
 
-void SkyeBase::getConfiguraionParams(const ros::NodeHandle &nh)
+void SkyeBase::getConfiguraionParams()
 {
   bool complete_list_params = true;
 

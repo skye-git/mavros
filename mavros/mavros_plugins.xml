@@ -70,9 +70,9 @@
 	<class name="skye_talker" type="mavplugin::SkyeTalkerPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Send data from ROS to Skye.</description>
 	</class>
-	<!-- <class name="skye_listener" type="mavplugin::SkyeListenerPlugin" base_class_type="mavplugin::MavRosPlugin">
+	<class name="skye_listener" type="mavplugin::SkyeListenerPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Reada data from Skye and publish them in ROS.</description>
-	</class> -->
+	</class>
 
 </library>
 

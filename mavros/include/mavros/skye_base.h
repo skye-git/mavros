@@ -50,7 +50,7 @@ protected:
   /**
    * @brief Load configuration parameters from yaml file.
    */
-  void getConfiguraionParams(const ros::NodeHandle &nh);
+  void getConfiguraionParams();
 
   ros::NodeHandle nh_;
   // parameters
