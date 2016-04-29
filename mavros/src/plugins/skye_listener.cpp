@@ -43,14 +43,14 @@ public:
     const message_map get_rx_handlers() {
         return {
             MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeListenerPlugin::handle_att_ctrl_out),
-                    MESSAGE_HANDLER(MAVLINK_MSG_ID_ALLOCATION_OUTPUT, &SkyeListenerPlugin::handle_allocator_out)
+            MESSAGE_HANDLER(MAVLINK_MSG_ID_ALLOCATION_OUTPUT, &SkyeListenerPlugin::handle_allocator_out)
         };
     }
 
 private:
     ros::NodeHandle nh;
     UAS *uas;
-    int seq_id;
+    unsigned int seq_id;
 
     ros::Publisher torque_pub;	/*< attitide controller output torque in to be applied in the CoG. */
     ros::Publisher allocator_output_pub;	/*< allocator output thrust and angle for every AU. */

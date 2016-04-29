@@ -18,9 +18,6 @@ SkyeBase::SkyeBase() : nh_("~") {
   // Load parameters from yalm file
   getConfiguraionParams();
 
-  ROS_INFO_STREAM("************* topic_imu_skye: " << topic_imu_skye_ << " *************");
-  ROS_INFO_STREAM("************* au_number: " << au_number_ << " *************");
-
   // Service clients
   apply_wrench_service_name_ = "/skye_gz/" + hull_name_ + "/apply_wrench"; 
   apply_wrench_hull_cog_ = nh_.serviceClient<skye_ros::ApplyWrenchCogBf>(apply_wrench_service_name_);
