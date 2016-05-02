@@ -29,7 +29,8 @@ class SkyeTalkerPlugin : public MavRosPlugin {
 public:
 	SkyeTalkerPlugin() :
 		nh("~"),
-		uas(nullptr)
+        uas(nullptr),
+        received_first_heartbit(false)
 	{}
 
 	/* -*- helper function -*- */
@@ -66,19 +67,21 @@ public:
 		uas = &uas_;
 
 		skye_ros_imu_sk_sub = nh.subscribe(skye_base.getImuTopicName(), 
-																			 10,
-																			 &SkyeTalkerPlugin::imu_sk_callback, this);
+                                           10,
+                                           &SkyeTalkerPlugin::imu_sk_callback, this);
 
 		set_skye_c_mode_srv = nh.advertiseService("/skye_mr/set_skye_c_mode", &SkyeTalkerPlugin::set_skye_c_mode, this);
 	}
 
 	~SkyeTalkerPlugin(){
-		// unset HIL mode before exiting
+        // disable HIL mode before exiting
 		set_hil_mode(false);
 	}
 
 	const message_map get_rx_handlers() {
-		return { /* Rx disabled */ };
+        return {
+            MESSAGE_HANDLER(MAVLINK_MSG_ID_HEARTBEAT, &SkyeTalkerPlugin::handle_heartbeat)
+        };
 	}
 
 private:
@@ -87,6 +90,7 @@ private:
 	ros::Subscriber skye_ros_imu_sk_sub; // IMU topic in Skye's IMU frame
 	skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
 	ros::ServiceServer set_skye_c_mode_srv; // service to set SKYE_C_MODE parameter in px4
+    bool received_first_heartbit;
 
 	/* -*- message handlers -*- */
 	void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p) {
@@ -130,37 +134,16 @@ private:
                                                                 yawspeed,
                                                                 q);
 		UAS_FCU(uas)->send_message(&msg);
-
-        //test
-		/*char param_id[12];
-		std::string pippo = "SKYE_C_MODE";
-		strncpy(param_id, pippo.c_str(), 12);
-
-		int one = 3;
-		float *pluto = (float*)(&one);
-
-		mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
-						uas->get_tgt_system(),
-						(uint8_t)MAV_COMP_ID_ALL,
-						param_id,
-						*pluto,
-						(uint8_t)MAV_PARAM_TYPE_INT32
-						);
-		UAS_FCU(uas)->send_message(&msg);
-
-		ROS_INFO("param sent");*/
-		//end test
-
-		//test
-		/*mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
-						UAS_PACK_TGT(uas),
-						"SKYE_HIL_MODE",
-						1,
-						MAV_PARAM_TYPE_INT32 //(uint8_t)MAV_PARAM_TYPE_INT32
-						);
-		UAS_FCU(uas)->send_message(&msg);*/
-		//end test
 	}
+
+    void handle_heartbeat(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) {
+        // the first time we receive the hearbit msg we enable HIL mode
+        if(!received_first_heartbit){
+            // enable HIL mode before exiting
+            set_hil_mode(true);
+            received_first_heartbit = true;
+        }
+    }
 
 	/* -*- services -*- */
 	bool set_skye_c_mode(mavros_msgs::SkyeCMode::Request &req,
