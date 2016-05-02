@@ -13,8 +13,6 @@ namespace skye_base
 {
 
 SkyeBase::SkyeBase() : nh_("~") {
-
-
   // Load parameters from yalm file
   getConfiguraionParams();
 
@@ -30,12 +28,10 @@ SkyeBase::SkyeBase() : nh_("~") {
 }
 
 std::string SkyeBase::getImuTopicName(){
-
   return topic_imu_skye_;
 }
 
 bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
-
   // check service is available
   if(isBodyWrenchAvail()) // check if service is available
     return apply_wrench_hull_cog_.call(wrench_srv);
@@ -44,7 +40,6 @@ bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
 }
 
 bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index){
-
   // check service is available & index < number of AUs
   if(isAuForce2DAvail(au_index) && au_index < au_number_){ // check if service is available
     ros::ServiceClient force2D_client = apply_au_force_2d_.at(au_index);
@@ -56,23 +51,20 @@ bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int 
 }
 
 bool SkyeBase::isBodyWrenchAvail(){
-
   return ros::service::exists(apply_wrench_service_name_, false);
 }
 
 bool SkyeBase::isAuForce2DAvail(){
-
   bool all_available = true;
 
-  for(std::string s : apply_au_force_service_name_) {
-    all_available &= ros::service::exists(s, false);
+  for(int i = 0; i < au_number_; i++) {
+    all_available &= isAuForce2DAvail(i);
   }
 
   return all_available;
 }
 
 bool SkyeBase::isAuForce2DAvail(const int &au_index){
-
   return ros::service::exists(apply_au_force_service_name_.at(au_index), false);
 }
 
@@ -88,6 +80,10 @@ void SkyeBase::getConfiguraionParams()
   if(!complete_list_params)
     ROS_DEBUG("Parameter(s) missing in yaml file.");
   
+}
+
+int SkyeBase::getAuNumber(){
+    return au_number_;
 }
 
 

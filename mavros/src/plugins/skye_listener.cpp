@@ -93,7 +93,7 @@ private:
         srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
 
         // call service if available
-        if(skye_base.isBodyWrenchAvail()){
+        /*if(skye_base.isBodyWrenchAvail()){ TODO restore me!
             if(skye_base.setBodyWrench(srv))
             {
                 //ROS_INFO("wrench applied!");
@@ -102,7 +102,7 @@ private:
             {
                 ROS_ERROR("[skye_listener] Failed to apply body wrench");
             }
-        }
+        }*/
 
     }
 
@@ -122,7 +122,7 @@ private:
 
         skye_ros::ApplyForce2DCogBf  srv;
 
-        for(int i = 0; i < 6; i++){
+        for(int i = 0; i < skye_base.getAuNumber(); i++){
             srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * DEG_TO_RAD);
             srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * DEG_TO_RAD);
 
@@ -132,16 +132,16 @@ private:
             srv.request.start_time = ros::Time::now();
             srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
             // call service if available
-            /*if(skye_base.isAuForce2DAvail(i)){
-        if(skye_base.setAuForce2D(srv, i))
-        {
-          //ROS_INFO("force applied!");
-        }
-        else
-        {
-          ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
-        }
-      } */
+            if(skye_base.isAuForce2DAvail(i)){
+                if(skye_base.setAuForce2D(srv, i))
+                {
+                    //ROS_INFO("force applied!");
+                }
+                else
+                {
+                    ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+                }
+            }
         }
 
         // publish

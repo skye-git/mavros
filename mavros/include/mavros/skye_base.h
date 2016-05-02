@@ -45,6 +45,10 @@ public:
    * @brief Check if au force 2D service is available.
    */
   bool isAuForce2DAvail(const int &au_index);
+  /**
+   * @brief Get number of AUs.
+   */
+  int getAuNumber();
 
 protected:
   /**
