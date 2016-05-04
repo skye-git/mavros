@@ -19,180 +19,206 @@
 
 #include <sensor_msgs/Imu.h>
 #include <mavros_msgs/SkyeCMode.h>
+#include <gazebo_msgs/LinkState.h>
 
 namespace mavplugin {
 
-/**
+  /**
  * @brief Send data from skye_ros pkg to Skye's firmware running on the PX4 stack.
  */
-class SkyeTalkerPlugin : public MavRosPlugin {
-public:
-	SkyeTalkerPlugin() :
-		nh("~"),
-        uas(nullptr),
-        received_first_heartbit(false)
-	{}
+  class SkyeTalkerPlugin : public MavRosPlugin {
+  public:
+    SkyeTalkerPlugin() :
+      nh("~"),
+      uas(nullptr),
+      received_first_heartbit(false)
+    {}
 
-	/* -*- helper function -*- */
-	void set_parameter(std::string param_name, int param_value){
+    /* -*- helper function -*- */
+    void set_parameter(std::string param_name, int param_value){
 
-		mavlink_message_t msg;
-		float *float_var = (float*)(&param_value);//todo find a better solution to this workaround
-		char c_buffer[16]; // 16 is the maximum length of mavlink param name
-		strcpy(c_buffer, param_name.c_str());
+      mavlink_message_t msg;
+      float *float_var = (float*)(&param_value);//todo find a better solution to this workaround
+      char c_buffer[16]; // 16 is the maximum length of mavlink param name
+      strcpy(c_buffer, param_name.c_str());
 
-		mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
-																		uas->get_tgt_system(),
-																		(uint8_t)MAV_COMP_ID_ALL,
-																		c_buffer,
-																		*float_var,
-																		(uint8_t)MAV_PARAM_TYPE_INT32);
-		UAS_FCU(uas)->send_message(&msg);
-	}
+      mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                      uas->get_tgt_system(),
+                                      (uint8_t)MAV_COMP_ID_ALL,
+                                      c_buffer,
+                                      *float_var,
+                                      (uint8_t)MAV_PARAM_TYPE_INT32);
+      UAS_FCU(uas)->send_message(&msg);
+    }
 
-	void set_hil_mode(bool hil_on){
-		if(hil_on){
-			set_parameter("SKYE_HIL_MODE", 1);
-			ROS_INFO_STREAM("[skye_talker]: set HIL mode to 1");
-		}
-		else{
-			set_parameter("SKYE_HIL_MODE", 0);
-			ROS_INFO_STREAM("[skye_talker]: set HIL mode to 0");
-		}
+    void set_hil_mode(bool hil_on){
+      if(hil_on){
+          set_parameter("SKYE_HIL_MODE", 1);
+          ROS_INFO_STREAM("[skye_talker]: set HIL mode to 1");
+        }
+      else{
+          set_parameter("SKYE_HIL_MODE", 0);
+          ROS_INFO_STREAM("[skye_talker]: set HIL mode to 0");
+        }
 
-	}
+    }
 
-	void initialize(UAS &uas_)
-	{
-		uas = &uas_;
+    void initialize(UAS &uas_)
+    {
+      uas = &uas_;
 
-		skye_ros_imu_sk_sub = nh.subscribe(skye_base.getImuTopicName(), 
-                                           10,
-                                           &SkyeTalkerPlugin::imu_sk_callback, this);
+      skye_ros_imu_sk_sub = nh.subscribe(skye_base.getImuTopicName(),
+                                         10,
+                                         &SkyeTalkerPlugin::imu_sk_callback, this);
 
-		set_skye_c_mode_srv = nh.advertiseService("/skye_mr/set_skye_c_mode", &SkyeTalkerPlugin::set_skye_c_mode, this);
-	}
+      set_skye_c_mode_srv = nh.advertiseService("/skye_mr/set_skye_c_mode", &SkyeTalkerPlugin::set_skye_c_mode, this);
 
-	~SkyeTalkerPlugin(){
-        // disable HIL mode before exiting
-		set_hil_mode(false);
-	}
+      skye_ros_ground_truth_sub = nh.subscribe("/skye_ros/ground_truth/hull",
+                                               10,
+                                               &SkyeTalkerPlugin::ground_truth_callback, this);
+    }
 
-	const message_map get_rx_handlers() {
-        return {
-            MESSAGE_HANDLER(MAVLINK_MSG_ID_HEARTBEAT, &SkyeTalkerPlugin::handle_heartbeat)
+    ~SkyeTalkerPlugin(){
+      // disable HIL mode before exiting
+      set_hil_mode(false);
+    }
+
+    const message_map get_rx_handlers() {
+      return {
+          MESSAGE_HANDLER(MAVLINK_MSG_ID_HEARTBEAT, &SkyeTalkerPlugin::handle_heartbeat)
         };
-	}
+    }
 
-private:
-	ros::NodeHandle nh;
-	UAS *uas;
-	ros::Subscriber skye_ros_imu_sk_sub; // IMU topic in Skye's IMU frame
-	skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
-	ros::ServiceServer set_skye_c_mode_srv; // service to set SKYE_C_MODE parameter in px4
+  private:
+    ros::NodeHandle nh;
+    UAS *uas;
+    ros::Subscriber skye_ros_imu_sk_sub; // IMU topic in Skye's IMU frame
+    ros::Subscriber skye_ros_ground_truth_sub; // Ground truth topic
+    skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
+    ros::ServiceServer set_skye_c_mode_srv; // service to set SKYE_C_MODE parameter in px4
     bool received_first_heartbit;
 
-	/* -*- message handlers -*- */
-	void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p) {
+    /* -*- message handlers -*- */
+    void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p) {
 
-		mavlink_message_t msg;
-		Eigen::Quaterniond q_imu; 
-		float roll, pitch, yaw;
-		float rollspeed, pitchspeed, yawspeed;
-		float q[4];
+      mavlink_message_t msg;
+      Eigen::Quaterniond q_imu;
+      float roll, pitch, yaw;
+      float rollspeed, pitchspeed, yawspeed;
+      float q[4];
 
-		/* Convert data to fullfill a mavlink message. */
-		q_imu.w() = imu_sk_p->orientation.w;
-	  q_imu.x() = imu_sk_p->orientation.x;
-	  q_imu.y() = imu_sk_p->orientation.y;
-	  q_imu.z() = imu_sk_p->orientation.z;
+      /* Convert data to fullfill a mavlink message. */
+      q_imu.w() = imu_sk_p->orientation.w;
+      q_imu.x() = imu_sk_p->orientation.x;
+      q_imu.y() = imu_sk_p->orientation.y;
+      q_imu.z() = imu_sk_p->orientation.z;
 
-	  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
-	  roll = static_cast<float>(euler_angles[2]);
-	  pitch = static_cast<float>(euler_angles[1]);
-	  yaw = static_cast<float>(euler_angles[0]);
+      Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
+      roll = static_cast<float>(euler_angles[2]);
+      pitch = static_cast<float>(euler_angles[1]);
+      yaw = static_cast<float>(euler_angles[0]);
 
-	  rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
-	  pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
-	  yawspeed = static_cast<float>(imu_sk_p->angular_velocity.z);
+      rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
+      pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
+      yawspeed = static_cast<float>(imu_sk_p->angular_velocity.z);
 
-	  q[0] = static_cast<float>(q_imu.w());
-	  q[1] = static_cast<float>(q_imu.x());
-	  q[2] = static_cast<float>(q_imu.y());
-	  q[3] = static_cast<float>(q_imu.z());
+      q[0] = static_cast<float>(q_imu.w());
+      q[1] = static_cast<float>(q_imu.x());
+      q[2] = static_cast<float>(q_imu.y());
+      q[3] = static_cast<float>(q_imu.z());
 
-	  uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+      uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
-		/* Send the skye_attitude_hil message to Skye. */
-		mavlink_msg_skye_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
-																						                    timestamp,
-																						                    roll,
-                                                                pitch,
-                                                                yaw,
-                                                                rollspeed,
-                                                                pitchspeed,
-                                                                yawspeed,
-                                                                q);
-		UAS_FCU(uas)->send_message(&msg);
-	}
+      /* Send the skye_attitude_hil message to Skye. */
+      mavlink_msg_skye_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                              timestamp,
+                                              roll,
+                                              pitch,
+                                              yaw,
+                                              rollspeed,
+                                              pitchspeed,
+                                              yawspeed,
+                                              q);
+      UAS_FCU(uas)->send_message(&msg);
+    }
 
     void handle_heartbeat(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) {
-        // the first time we receive the hearbit msg we enable HIL mode
-        if(!received_first_heartbit){
-            // enable HIL mode before exiting
-            set_hil_mode(true);
-            received_first_heartbit = true;
+      // the first time we receive the hearbit msg we enable HIL mode
+      if(!received_first_heartbit){
+          // enable HIL mode before exiting
+          set_hil_mode(true);
+          received_first_heartbit = true;
         }
     }
 
-	/* -*- services -*- */
-	bool set_skye_c_mode(mavros_msgs::SkyeCMode::Request &req,
-									     mavros_msgs::SkyeCMode::Response &res){
+    void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth) {
 
-		bool send_new_mode = false;
-		int new_c_mode = -1;
-		std::string str_msg = "";
+      mavlink_message_t msg;
+      float x, y, z;
 
-		// check mode is either MANUAL, 5DOF or 6DOF
-		switch(req.mode){
-			case SKYE_CONTROL_MODE_MANUAL:
-				new_c_mode = SKYE_CONTROL_MODE_MANUAL;
-				str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_MANUAL";
-				send_new_mode = true;
-				break;
+      x = ground_truth->pose.position.x;
+      y = ground_truth->pose.position.y;
+      z = ground_truth->pose.position.z;
 
-			case SKYE_CONTROL_MODE_5DOF:
-				new_c_mode = SKYE_CONTROL_MODE_5DOF;
-				str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_5DOF";
-				send_new_mode = true;
-				break;
+      uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
-			case SKYE_CONTROL_MODE_6DOF:
-				new_c_mode = SKYE_CONTROL_MODE_6DOF;
-				str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_6DOF";
-				send_new_mode = true;
-				break;
+      /* Send the skye_attitude_hil message to Skye. */
+      mavlink_msg_skye_position_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                              timestamp,
+                                              x,
+                                              y,
+                                              z);
+      UAS_FCU(uas)->send_message(&msg);
+    }
 
-			default:
-				str_msg = "[skye_talker]: specified mode in SkyeCMode request is not valid";
-				send_new_mode = false;
-				break;
-		}
+    /* -*- services -*- */
+    bool set_skye_c_mode(mavros_msgs::SkyeCMode::Request &req,
+                         mavros_msgs::SkyeCMode::Response &res){
+
+      bool send_new_mode = false;
+      int new_c_mode = -1;
+      std::string str_msg = "";
+
+      // check mode is either MANUAL, 5DOF or 6DOF
+      switch(req.mode){
+        case SKYE_CONTROL_MODE_MANUAL:
+          new_c_mode = SKYE_CONTROL_MODE_MANUAL;
+          str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_MANUAL";
+          send_new_mode = true;
+          break;
+
+        case SKYE_CONTROL_MODE_5DOF:
+          new_c_mode = SKYE_CONTROL_MODE_5DOF;
+          str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_5DOF";
+          send_new_mode = true;
+          break;
+
+        case SKYE_CONTROL_MODE_6DOF:
+          new_c_mode = SKYE_CONTROL_MODE_6DOF;
+          str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_6DOF";
+          send_new_mode = true;
+          break;
+
+        default:
+          str_msg = "[skye_talker]: specified mode in SkyeCMode request is not valid";
+          send_new_mode = false;
+          break;
+        }
 
 
-		if(send_new_mode){
-			set_parameter("SKYE_C_MODE", req.mode);
-		}
+      if(send_new_mode){
+          set_parameter("SKYE_C_MODE", req.mode);
+        }
 
-		ROS_INFO_STREAM(str_msg);
+      ROS_INFO_STREAM(str_msg);
 
-		res.success = send_new_mode;
+      res.success = send_new_mode;
 
-		return true;
-	}
+      return true;
+    }
 
 
-};
+  };
 };	// namespace mavplugin
 
 PLUGINLIB_EXPORT_CLASS(mavplugin::SkyeTalkerPlugin, mavplugin::MavRosPlugin)
