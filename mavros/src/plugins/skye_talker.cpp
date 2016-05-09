@@ -19,7 +19,10 @@
 
 #include <sensor_msgs/Imu.h>
 #include <mavros_msgs/SkyeCMode.h>
+#include <mavros_msgs/ParamSet.h>
 #include <gazebo_msgs/LinkState.h>
+#include <geometry_msgs/Twist.h>
+#include <mavros_msgs/SetSkyePosCtrlParms.h>
 
 namespace mavplugin {
 
@@ -51,6 +54,21 @@ namespace mavplugin {
       UAS_FCU(uas)->send_message(&msg);
     }
 
+    void set_parameter(std::string param_name, float param_value){
+
+      mavlink_message_t msg;
+      char c_buffer[16]; // 16 is the maximum length of mavlink param name
+      strcpy(c_buffer, param_name.c_str());
+
+      mavlink_msg_param_set_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                      uas->get_tgt_system(),
+                                      (uint8_t)MAV_COMP_ID_ALL,
+                                      c_buffer,
+                                      param_value,
+                                      MAV_PARAM_TYPE_REAL32);
+      UAS_FCU(uas)->send_message(&msg);
+    }
+
     void set_hil_mode(bool hil_on){
       if(hil_on){
           set_parameter("SKYE_HIL_MODE", 1);
@@ -73,9 +91,18 @@ namespace mavplugin {
 
       set_skye_c_mode_srv = nh.advertiseService("/skye_mr/set_skye_c_mode", &SkyeTalkerPlugin::set_skye_c_mode, this);
 
+      set_skye_param_srv = nh.advertiseService("/skye_mr/set_param", &SkyeTalkerPlugin::set_skye_param, this);
+
+      set_skye_pos_ctrl_srv = nh.advertiseService("/skye_mr/set_param/pos_ctrl",
+                                                  &SkyeTalkerPlugin::set_skye_pos_ctrl_params, this);
+
       skye_ros_ground_truth_sub = nh.subscribe("/skye_ros/ground_truth/hull",
                                                10,
                                                &SkyeTalkerPlugin::ground_truth_callback, this);
+
+      keyboard_teleoperate_sub = nh.subscribe("/cmd_vel_mux/input/teleop",
+                                              10,
+                                              &SkyeTalkerPlugin::keyboard_teleop_callback, this);
     }
 
     ~SkyeTalkerPlugin(){
@@ -94,8 +121,11 @@ namespace mavplugin {
     UAS *uas;
     ros::Subscriber skye_ros_imu_sk_sub; // IMU topic in Skye's IMU frame
     ros::Subscriber skye_ros_ground_truth_sub; // Ground truth topic
+    ros::Subscriber keyboard_teleoperate_sub; // keyboard teleoperator
     skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
     ros::ServiceServer set_skye_c_mode_srv; // service to set SKYE_C_MODE parameter in px4
+    ros::ServiceServer set_skye_param_srv; // service to set a parameter in px4
+    ros::ServiceServer set_skye_pos_ctrl_srv; // service to set a position controller parameters in px4
     bool received_first_heartbit;
 
     /* -*- message handlers -*- */
@@ -154,11 +184,16 @@ namespace mavplugin {
     void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth) {
 
       mavlink_message_t msg;
-      float x, y, z;
+      float x, y, z, vx, vy, vz;
 
-      x = ground_truth->pose.position.x;
-      y = ground_truth->pose.position.y;
-      z = ground_truth->pose.position.z;
+      x = static_cast<float>(ground_truth->pose.position.x);
+      y = static_cast<float>(ground_truth->pose.position.y);
+      z = static_cast<float>(ground_truth->pose.position.z);
+      vx = static_cast<float>(ground_truth->twist.linear.x);
+      vy = static_cast<float>(ground_truth->twist.linear.y);
+      vz = static_cast<float>(ground_truth->twist.linear.z);
+
+      ROS_INFO("\n Pos: %f, %f, %f \n Vel: %f, %f, %f", x, y, z, vx, vy, vz);
 
       uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
@@ -167,7 +202,46 @@ namespace mavplugin {
                                               timestamp,
                                               x,
                                               y,
-                                              z);
+                                              z,
+                                              vx,
+                                              vy,
+                                              vz);
+      UAS_FCU(uas)->send_message(&msg);
+    }
+
+    void keyboard_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop) {
+
+      mavlink_message_t msg;
+      float linear_x, linear_y, linear_z; // linear velocities
+      float angular_x, angular_y, angular_z; // angular velocities
+
+      linear_x = static_cast<float>(twist_teleop->linear.x);
+      linear_y = static_cast<float>(twist_teleop->linear.y);
+      linear_z = static_cast<float>(twist_teleop->linear.z);
+      angular_x = static_cast<float>(twist_teleop->angular.x);
+      angular_y = static_cast<float>(twist_teleop->angular.y);
+      angular_z = static_cast<float>(twist_teleop->angular.z);
+
+      uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+
+      /* Send the skye_attitude_hil message to Skye. */
+      mavlink_msg_setpoint_6dof_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                          timestamp,
+                                          linear_x,
+                                          linear_y,
+                                          linear_z,
+                                          angular_x,
+                                          angular_y,
+                                          angular_z);
+      //TODO delete me
+      /*ROS_INFO("Teleop: \nlinear[%f, %f, %f] \n angular[%f, %f, %f] \n",
+               linear_x,
+               linear_y,
+               linear_z,
+               angular_x,
+               angular_y,
+               angular_z);*/
+
       UAS_FCU(uas)->send_message(&msg);
     }
 
@@ -213,6 +287,43 @@ namespace mavplugin {
       ROS_INFO_STREAM(str_msg);
 
       res.success = send_new_mode;
+
+      return true;
+    }
+
+    bool set_skye_param(mavros_msgs::ParamSet::Request &req,
+                        mavros_msgs::ParamSet::Response &res){
+
+
+      if(req.value.integer != 0){
+        int param = req.value.integer;
+        set_parameter(req.param_id, param);
+      }
+      else{
+        float param = req.value.real;
+        set_parameter(req.param_id, param);
+      }
+
+      res.success = true;
+
+      return true;
+    }
+
+    bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
+                                  mavros_msgs::SetSkyePosCtrlParms::Response &res){
+
+
+      float outer_p, outer_i, inner_p;
+
+      outer_p = req.outer_p;
+      outer_i = req.outer_i;
+      inner_p = req.inner_p;
+
+      set_parameter("SKYE_OUTER_P", outer_p);
+      set_parameter("SKYE_OUTER_I", outer_i);
+      set_parameter("SKYE_INNER_P", inner_p);
+
+      res.success = true;
 
       return true;
     }

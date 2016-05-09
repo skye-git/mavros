@@ -65,6 +65,7 @@ add_service_files(
   WaypointPush.srv
   WaypointSetCurrent.srv
   SkyeCMode.srv
+  SetSkyePosCtrlParms.srv
 )
 
 # add_action_files(
