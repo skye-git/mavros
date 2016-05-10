@@ -18,7 +18,8 @@
 #include "skye_ros/ApplyWrenchCogBf.h"
 #include "skye_ros/AllocatorOutput.h"
 
-#define DEG_TO_RAD M_PI / 180.0	
+#define DEG_TO_RAD M_PI / 180.0
+#define WRENCH_DURATION_S 1.0 / 50.0 // controllers run at 50 Hz
 
 namespace mavplugin {
 
@@ -57,9 +58,9 @@ private:
   UAS *uas;
   unsigned int seq_id;
 
-  ros::Publisher torque_pub;	/*< attitide controller output torque in to be applied in the CoG. */
-  ros::Publisher allocator_output_pub;	/*< allocator output thrust and angle for every AU. */
-  ros::Publisher force_pub;
+  ros::Publisher torque_pub; /*< attitide controller output torque in to be applied in the CoG. */
+  ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
+  ros::Publisher force_pub; /*< position controller output force. */
   skye_base::SkyeBase skye_base;
 
 //-----------------------------------------------------------------------------
@@ -74,9 +75,9 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   vector3_msg->header.seq = seq_id++;
   vector3_msg->header.stamp = ros::Time::now();
   vector3_msg->header.frame_id = "0";
-  vector3_msg->vector.x	=	attiude_ctrl_output.M_x;
-  vector3_msg->vector.y	=	attiude_ctrl_output.M_y;
-  vector3_msg->vector.z	=	attiude_ctrl_output.M_z;
+  vector3_msg->vector.x	= attiude_ctrl_output.M_x;
+  vector3_msg->vector.y	= attiude_ctrl_output.M_y;
+  vector3_msg->vector.z	= attiude_ctrl_output.M_z;
 
   // publish
   torque_pub.publish(vector3_msg);
@@ -97,8 +98,7 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.wrench.torque.z = attiude_ctrl_output.M_z;
 
   srv.request.start_time = ros::Time::now();
-  //srv.request.duration = ros::Duration(-1); //<--- causes problems
-  srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
+  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
 
   // call service if available
   if(skye_base.isBodyWrenchAvail()){
@@ -129,26 +129,24 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   skye_ros::ApplyForce2DCogBf  srv;
 
   for(int i = 0; i < skye_base.getAuNumber(); i++){
-      srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * DEG_TO_RAD);
-      srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * DEG_TO_RAD);
+    srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * DEG_TO_RAD);
+    srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * DEG_TO_RAD);
 
-      alocator_out_msg->thrust[i] = allocator_output.thrust[i];
-      alocator_out_msg->angle[i] = allocator_output.angle[i];
+    alocator_out_msg->thrust[i] = allocator_output.thrust[i];
+    alocator_out_msg->angle[i] = allocator_output.angle[i];
 
-      srv.request.start_time = ros::Time::now();
-      srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
-      // call service if available
-      /*if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
-            if(skye_base.setAuForce2D(srv, i))
-            {
-                //ROS_INFO("force applied!");
-            }
-            else
-            {
-                ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
-            }
-        }*/
-    }
+    srv.request.start_time = ros::Time::now();
+    srv.request.duration = ros::Duration(WRENCH_DURATION_S);
+    // call service if available
+    /*if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
+        if(skye_base.setAuForce2D(srv, i)){
+            //ROS_INFO("force applied!");
+        }
+        else{
+            ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+        }
+      }*/
+  }
 
   // publish
   allocator_output_pub.publish(alocator_out_msg);
@@ -166,9 +164,9 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   vector3_msg->header.seq = seq_id++;
   vector3_msg->header.stamp = ros::Time::now();
   vector3_msg->header.frame_id = "0";
-  vector3_msg->vector.x =	position_ctrl_output.F_x;
-  vector3_msg->vector.y =	position_ctrl_output.F_y;
-  vector3_msg->vector.z =	position_ctrl_output.F_z;
+  vector3_msg->vector.x = position_ctrl_output.F_x;
+  vector3_msg->vector.y = position_ctrl_output.F_y;
+  vector3_msg->vector.z = position_ctrl_output.F_z;
 
   // publish
   force_pub.publish(vector3_msg);
@@ -189,7 +187,7 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.wrench.torque.z = 0.0;
 
   srv.request.start_time = ros::Time::now();
-  srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
+  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
 
   // call service if available
   if(skye_base.isBodyWrenchAvail()){
