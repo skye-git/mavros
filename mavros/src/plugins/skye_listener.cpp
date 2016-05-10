@@ -84,10 +84,14 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   // apply the torque to Gazebo
   skye_ros::ApplyWrenchCogBf  srv;
 
+  // the set wrench force to 0. This is a relative force added to the force which is
+  // already applied ot the body.
   srv.request.wrench.force.x = 0.0;
   srv.request.wrench.force.y = 0.0;
   srv.request.wrench.force.z = 0.0;
 
+  // the set wrench torque. This is a relative torque added to the torque which is
+  // already applied ot the body.
   srv.request.wrench.torque.x = attiude_ctrl_output.M_x;
   srv.request.wrench.torque.y = attiude_ctrl_output.M_y;
   srv.request.wrench.torque.z = attiude_ctrl_output.M_z;
@@ -97,16 +101,14 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = ros::Duration(1.0/25.0);//TEST  this one works!
 
   // call service if available
-  /*if(skye_base.isBodyWrenchAvail()){ TODO restore me!
-        if(skye_base.setBodyWrench(srv))
-        {
-            //ROS_INFO("wrench applied!");
-        }
-        else
-        {
-            ROS_ERROR("[skye_listener] Failed to apply body wrench");
-        }
-    }*/
+  if(skye_base.isBodyWrenchAvail()){
+    if(skye_base.setBodyWrench(srv)){
+      //ROS_INFO("wrench applied!");
+    }
+    else{
+      ROS_ERROR("[skye_listener] Failed to apply body wrench");
+    }
+  }
 
 }
 
@@ -174,10 +176,14 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   // apply the force to Gazebo
   skye_ros::ApplyWrenchCogBf  srv;
 
+  // the set wrench force. This is a relative force added to the force which is
+  // already applied ot the body.
   srv.request.wrench.force.x = position_ctrl_output.F_x;
   srv.request.wrench.force.y = position_ctrl_output.F_y;
   srv.request.wrench.force.z = position_ctrl_output.F_z;
 
+  // the set wrench troque to 0. This is a relative torque added to the torque which is
+  // already applied ot the body.
   srv.request.wrench.torque.x = 0.0;
   srv.request.wrench.torque.y = 0.0;
   srv.request.wrench.torque.z = 0.0;
@@ -187,14 +193,12 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 
   // call service if available
   if(skye_base.isBodyWrenchAvail()){
-    if(skye_base.setBodyWrench(srv))
-      {
-        //ROS_INFO("wrench applied!");
-      }
-    else
-      {
-        ROS_ERROR("[skye_listener] Failed to apply body wrench");
-      }
+    if(skye_base.setBodyWrench(srv)){
+      //ROS_INFO("wrench applied!");
+    }
+    else{
+      ROS_ERROR("[skye_listener] Failed to apply body wrench");
+    }
   }
 
 }
