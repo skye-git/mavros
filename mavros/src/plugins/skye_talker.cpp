@@ -91,7 +91,8 @@ void initialize(UAS &uas_){
                                      10,
                                      &SkyeTalkerPlugin::imu_sk_callback, this);
 
-  set_skye_c_mode_srv = nh.advertiseService("/skye_mr/set_skye_c_mode", &SkyeTalkerPlugin::set_skye_c_mode, this);
+  set_c_mod_pos_srv = nh.advertiseService("/skye_mr/set_c_mod_pos", &SkyeTalkerPlugin::set_c_mod_pos, this);
+  set_c_mod_att_srv = nh.advertiseService("/skye_mr/set_c_mod_att", &SkyeTalkerPlugin::set_c_mod_att, this);
 
   set_skye_param_srv = nh.advertiseService("/skye_mr/set_param", &SkyeTalkerPlugin::set_skye_param, this);
 
@@ -128,7 +129,8 @@ private:
   ros::Subscriber skye_ros_ground_truth_sub; // Ground truth topic
   ros::Subscriber keyboard_teleoperate_sub; // keyboard teleoperator
   skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
-  ros::ServiceServer set_skye_c_mode_srv; // service to set SKYE_C_MODE parameter in px4
+  ros::ServiceServer set_c_mod_pos_srv; // service to set C_MOD_POS parameter in px4
+  ros::ServiceServer set_c_mod_att_srv; // service to set C_MOD_ATT parameter in px4
   ros::ServiceServer set_skye_param_srv; // service to set a parameter in px4
   ros::ServiceServer set_skye_pos_ctrl_srv; // service to set a position controller parameters in px4
   bool received_first_heartbit;
@@ -200,7 +202,7 @@ void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
   vy = static_cast<float>(ground_truth->twist.linear.y);
   vz = static_cast<float>(ground_truth->twist.linear.z);
 
-  ROS_INFO("\n Pos: %f, %f, %f \n Vel: %f, %f, %f", x, y, z, vx, vy, vz);
+  //ROS_INFO("\n Pos: %f, %f, %f \n Vel: %f, %f, %f", x, y, z, vx, vy, vz);
 
   uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
@@ -254,8 +256,8 @@ void keyboard_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 }
 
 //-----------------------------------------------------------------------------
-bool set_skye_c_mode(mavros_msgs::SkyeCMode::Request &req,
-                     mavros_msgs::SkyeCMode::Response &res){
+bool set_c_mod_att(mavros_msgs::SkyeCMode::Request &req,
+                  mavros_msgs::SkyeCMode::Response &res){
 
   bool send_new_mode = false;
   int new_c_mode = -1;
@@ -263,33 +265,73 @@ bool set_skye_c_mode(mavros_msgs::SkyeCMode::Request &req,
 
   // check mode is either MANUAL, 5DOF or 6DOF
   switch(req.mode){
-    case SKYE_CONTROL_MODE_MANUAL:
-      new_c_mode = SKYE_CONTROL_MODE_MANUAL;
-      str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_MANUAL";
+    case ATT_MANUAL:
+      new_c_mode = ATT_MANUAL;
+      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
       send_new_mode = true;
       break;
 
-    case SKYE_CONTROL_MODE_5DOF:
-      new_c_mode = SKYE_CONTROL_MODE_5DOF;
-      str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_5DOF";
+    case ATT_5_DOF:
+      new_c_mode = ATT_5_DOF;
+      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
       send_new_mode = true;
       break;
 
-    case SKYE_CONTROL_MODE_6DOF:
-      new_c_mode = SKYE_CONTROL_MODE_6DOF;
-      str_msg = "[skye_talker]: SKYE_C_MODE switched to SKYE_CONTROL_MODE_6DOF";
+    case ATT_6_DOF:
+      new_c_mode = ATT_6_DOF;
+      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
       send_new_mode = true;
       break;
 
     default:
-      str_msg = "[skye_talker]: specified mode in SkyeCMode request is not valid";
+      str_msg = "[skye_talker]: specified mode in C_MOD_ATT request is not valid";
       send_new_mode = false;
       break;
     }
 
 
   if(send_new_mode){
-      set_parameter("SKYE_C_MODE", req.mode);
+      set_parameter("C_MOD_ATT", req.mode);
+    }
+
+  ROS_INFO_STREAM(str_msg);
+
+  res.success = send_new_mode;
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool set_c_mod_pos(mavros_msgs::SkyeCMode::Request &req,
+                  mavros_msgs::SkyeCMode::Response &res){
+
+  bool send_new_mode = false;
+  int new_c_mode = -1;
+  std::string str_msg = "";
+
+  // check mode is either MANUAL or CASCADE
+  switch(req.mode){
+    case POS_MANUAL:
+      new_c_mode = POS_MANUAL;
+      str_msg = "[skye_talker]: c switched to ATT_MANUAL";
+      send_new_mode = true;
+      break;
+
+    case POS_CASCADE_PID:
+      new_c_mode = POS_CASCADE_PID;
+      str_msg = "[skye_talker]: POS_CASCADE_PID switched to ATT_MANUAL";
+      send_new_mode = true;
+      break;
+
+    default:
+      str_msg = "[skye_talker]: specified mode in C_MOD_POS request is not valid";
+      send_new_mode = false;
+      break;
+    }
+
+
+  if(send_new_mode){
+      set_parameter("C_MOD_POS", req.mode);
     }
 
   ROS_INFO_STREAM(str_msg);

@@ -101,6 +101,55 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = ros::Duration(WRENCH_DURATION_S);
 
   // call service if available
+  /*if(skye_base.isBodyWrenchAvail()){
+    if(skye_base.setBodyWrench(srv)){
+      //ROS_INFO("wrench applied!");
+    }
+    else{
+      ROS_ERROR("[skye_listener] Failed to apply body wrench");
+    }
+  }*/
+
+}
+
+//-----------------------------------------------------------------------------
+void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
+
+  mavlink_position_ctrl_output_t position_ctrl_output;
+  mavlink_msg_position_ctrl_output_decode(msg, &position_ctrl_output);
+
+  auto vector3_msg = boost::make_shared<geometry_msgs::Vector3Stamped>();
+
+  // fill
+  vector3_msg->header.seq = seq_id++;
+  vector3_msg->header.stamp = ros::Time::now();
+  vector3_msg->header.frame_id = "0";
+  vector3_msg->vector.x = position_ctrl_output.F_x;
+  vector3_msg->vector.y = position_ctrl_output.F_y;
+  vector3_msg->vector.z = position_ctrl_output.F_z;
+
+  // publish
+  force_pub.publish(vector3_msg);
+
+  // apply the force to Gazebo
+  skye_ros::ApplyWrenchCogBf  srv;
+
+  // the set wrench force. This is a relative force added to the force which is
+  // already applied ot the body.
+  srv.request.wrench.force.x = position_ctrl_output.F_x;
+  srv.request.wrench.force.y = position_ctrl_output.F_y;
+  srv.request.wrench.force.z = position_ctrl_output.F_z;
+
+  // the set wrench troque to 0. This is a relative torque added to the torque which is
+  // already applied ot the body.
+  srv.request.wrench.torque.x = 0.0;
+  srv.request.wrench.torque.y = 0.0;
+  srv.request.wrench.torque.z = 0.0;
+
+  srv.request.start_time = ros::Time::now();
+  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
+
+  // call service if available
   if(skye_base.isBodyWrenchAvail()){
     if(skye_base.setBodyWrench(srv)){
       //ROS_INFO("wrench applied!");
@@ -152,54 +201,6 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   allocator_output_pub.publish(alocator_out_msg);
 }
 
-//-----------------------------------------------------------------------------
-void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
-
-  mavlink_position_ctrl_output_t position_ctrl_output;
-  mavlink_msg_position_ctrl_output_decode(msg, &position_ctrl_output);
-
-  auto vector3_msg = boost::make_shared<geometry_msgs::Vector3Stamped>();
-
-  // fill
-  vector3_msg->header.seq = seq_id++;
-  vector3_msg->header.stamp = ros::Time::now();
-  vector3_msg->header.frame_id = "0";
-  vector3_msg->vector.x = position_ctrl_output.F_x;
-  vector3_msg->vector.y = position_ctrl_output.F_y;
-  vector3_msg->vector.z = position_ctrl_output.F_z;
-
-  // publish
-  force_pub.publish(vector3_msg);
-
-  // apply the force to Gazebo
-  skye_ros::ApplyWrenchCogBf  srv;
-
-  // the set wrench force. This is a relative force added to the force which is
-  // already applied ot the body.
-  srv.request.wrench.force.x = position_ctrl_output.F_x;
-  srv.request.wrench.force.y = position_ctrl_output.F_y;
-  srv.request.wrench.force.z = position_ctrl_output.F_z;
-
-  // the set wrench troque to 0. This is a relative torque added to the torque which is
-  // already applied ot the body.
-  srv.request.wrench.torque.x = 0.0;
-  srv.request.wrench.torque.y = 0.0;
-  srv.request.wrench.torque.z = 0.0;
-
-  srv.request.start_time = ros::Time::now();
-  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
-
-  // call service if available
-  if(skye_base.isBodyWrenchAvail()){
-    if(skye_base.setBodyWrench(srv)){
-      //ROS_INFO("wrench applied!");
-    }
-    else{
-      ROS_ERROR("[skye_listener] Failed to apply body wrench");
-    }
-  }
-
-}
 
 };
 };	// namespace mavplugin
