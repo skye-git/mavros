@@ -106,4 +106,27 @@ In case of `CMake Error: Could not find a package configuration file provided by
 sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
 ```
 
+###Usage
+To launch the HIL simulation identify to which USB port Mavlink is communicationg and then type in a new terminal
+```bash
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200
+```
+In the above example Mavlink is using USB0. This launch files starts Gazebo in pause. You can press the "play" button whenever you are ready to start the simulation.
+
+####Changing Fimrware Parameter
+During HIL simulation it is not possible to change onboard paramters via QGroundControl. The above list of services show how to change onboard parameters.
+
+  * /skye_mr/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF);
+  * /skye_mr/set_pos_c_mod sets the position control mode. Possible values: 0 (Manual), 1 (cascade pid);
+  * /skye_mr/set_param to set any onboard parameters, either if it's integer or float.
+  
+Examples:
+
+```bash
+rosservice call /skye_mr/set_att_c_mod 0
+rosservice call /skye_mr/set_pos_c_mod 1
+rosservice call /skye_mr/set_param 'INTEGER_PARAM_NAME' '[PARAM_VALUE, 0.0]'
+rosservice call /skye_mr/set_param 'FLOAT_PARAM_NAME' '[0, PARAM_VALUE]'
+```
+
 
