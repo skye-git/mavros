@@ -265,26 +265,26 @@ bool set_c_mod_att(mavros_msgs::SkyeCMode::Request &req,
 
   // check mode is either MANUAL, 5DOF or 6DOF
   switch(req.mode){
-    case ATT_MANUAL:
-      new_c_mode = ATT_MANUAL;
-      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
+    case SKYE_ATT_C_MOD_MANUAL:
+      new_c_mode = SKYE_ATT_C_MOD_MANUAL;
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_MANUAL";
       send_new_mode = true;
       break;
 
-    case ATT_5_DOF:
-      new_c_mode = ATT_5_DOF;
-      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
+    case SKYE_ATT_C_MOD_5_DOF:
+      new_c_mode = SKYE_ATT_C_MOD_5_DOF;
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_5_DOF";
       send_new_mode = true;
       break;
 
-    case ATT_6_DOF:
-      new_c_mode = ATT_6_DOF;
-      str_msg = "[skye_talker]: C_MOD_ATT switched to ATT_MANUAL";
+    case SKYE_ATT_C_MOD_6_DOF:
+      new_c_mode = SKYE_ATT_C_MOD_6_DOF;
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_6_DOF";
       send_new_mode = true;
       break;
 
     default:
-      str_msg = "[skye_talker]: specified mode in C_MOD_ATT request is not valid";
+      str_msg = "[skye_talker]: specified mode in ATT_C_MOD request is not valid";
       send_new_mode = false;
       break;
     }
@@ -311,20 +311,20 @@ bool set_c_mod_pos(mavros_msgs::SkyeCMode::Request &req,
 
   // check mode is either MANUAL or CASCADE
   switch(req.mode){
-    case POS_MANUAL:
-      new_c_mode = POS_MANUAL;
-      str_msg = "[skye_talker]: c switched to ATT_MANUAL";
+    case SKYE_POS_C_MOD_MANUAL:
+      new_c_mode = SKYE_POS_C_MOD_MANUAL;
+      str_msg = "[skye_talker]: POS_C_MOD switched to SKYE_POS_C_MOD_MANUAL";
       send_new_mode = true;
       break;
 
-    case POS_CASCADE_PID:
-      new_c_mode = POS_CASCADE_PID;
-      str_msg = "[skye_talker]: POS_CASCADE_PID switched to ATT_MANUAL";
+    case SKYE_POS_C_MOD_CASCADE_PID:
+      new_c_mode = SKYE_POS_C_MOD_CASCADE_PID;
+      str_msg = "[skye_talker]: POS_C_MOD switched to SKYE_POS_C_MOD_CASCADE_PID";
       send_new_mode = true;
       break;
 
     default:
-      str_msg = "[skye_talker]: specified mode in C_MOD_POS request is not valid";
+      str_msg = "[skye_talker]: specified mode in POS_C_MOD request is not valid";
       send_new_mode = false;
       break;
     }
