@@ -9,3 +9,4 @@ core
 *.includes
 *.user
 *.idea
+build-mavros-Desktop_Qt_5_4_2_GCC_64bit-Default/*
