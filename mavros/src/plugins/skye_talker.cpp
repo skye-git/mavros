@@ -103,9 +103,9 @@ void initialize(UAS &uas_){
                                            10,
                                            &SkyeTalkerPlugin::ground_truth_callback, this);
 
-  keyboard_teleoperate_sub = nh.subscribe("/cmd_vel_mux/input/teleop",
+  joystick_teleoperate_sub = nh.subscribe("/spacenav/twist",
                                           10,
-                                          &SkyeTalkerPlugin::keyboard_teleop_callback, this);
+                                          &SkyeTalkerPlugin::joystick_teleop_callback, this);
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ private:
   UAS *uas;
   ros::Subscriber skye_ros_imu_sk_sub; // IMU topic in Skye's IMU frame
   ros::Subscriber skye_ros_ground_truth_sub; // Ground truth topic
-  ros::Subscriber keyboard_teleoperate_sub; // keyboard teleoperator
+  ros::Subscriber joystick_teleoperate_sub; // keyboard teleoperator
   skye_base::SkyeBase skye_base; // base class to interface with simulation of Skye in Gazebo
   ros::ServiceServer set_c_mod_pos_srv; // service to set C_MOD_POS parameter in px4
   ros::ServiceServer set_c_mod_att_srv; // service to set C_MOD_ATT parameter in px4
@@ -219,7 +219,7 @@ void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
 }
 
 //-----------------------------------------------------------------------------
-void keyboard_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
+void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 
   mavlink_message_t msg;
   float linear_x, linear_y, linear_z; // linear velocities
@@ -376,6 +376,8 @@ bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
   set_parameter("SKYE_INNER_P", inner_p);
 
   res.success = true;
+
+  ROS_INFO("[skye_talker] new pos ctrl parameters: %f, %f, %f", outer_p, outer_i, inner_p);
 
   return true;
 }

@@ -19,6 +19,10 @@
     <arg name="debug" value="$(arg debug)"/>
   </include> 
 
+  <!-- Include spacenav_nod for 3d mouse -->
+  <include file="$(find spacenav_node)/launch/classic.launch">
+  </include>
+
   <!-- Start "mavros_node"  fro px4 fmu -->
   <include file="$(find mavros)/launch/px4.launch">
     <arg name="fcu_url" value="$(arg fcu_url)" />
