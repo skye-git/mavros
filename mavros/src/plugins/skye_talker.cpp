@@ -91,8 +91,8 @@ void initialize(UAS &uas_){
                                      10,
                                      &SkyeTalkerPlugin::imu_sk_callback, this);
 
-  set_c_mod_pos_srv = nh.advertiseService("/skye_mr/set_c_mod_pos", &SkyeTalkerPlugin::set_c_mod_pos, this);
-  set_c_mod_att_srv = nh.advertiseService("/skye_mr/set_c_mod_att", &SkyeTalkerPlugin::set_c_mod_att, this);
+  set_c_mod_pos_srv = nh.advertiseService("/skye_mr/set_pos_c_mod", &SkyeTalkerPlugin::set_pos_c_mod, this);
+  set_c_mod_att_srv = nh.advertiseService("/skye_mr/set_att_c_mod", &SkyeTalkerPlugin::set_att_c_mod, this);
 
   set_skye_param_srv = nh.advertiseService("/skye_mr/set_param", &SkyeTalkerPlugin::set_skye_param, this);
 
@@ -256,7 +256,7 @@ void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 }
 
 //-----------------------------------------------------------------------------
-bool set_c_mod_att(mavros_msgs::SkyeCMode::Request &req,
+bool set_att_c_mod(mavros_msgs::SkyeCMode::Request &req,
                   mavros_msgs::SkyeCMode::Response &res){
 
   bool send_new_mode = false;
@@ -287,12 +287,12 @@ bool set_c_mod_att(mavros_msgs::SkyeCMode::Request &req,
       str_msg = "[skye_talker]: specified mode in ATT_C_MOD request is not valid";
       send_new_mode = false;
       break;
-    }
+  }
 
 
   if(send_new_mode){
-      set_parameter("C_MOD_ATT", req.mode);
-    }
+    set_parameter("ATT_C_MOD", req.mode);
+  }
 
   ROS_INFO_STREAM(str_msg);
 
@@ -302,7 +302,7 @@ bool set_c_mod_att(mavros_msgs::SkyeCMode::Request &req,
 }
 
 //-----------------------------------------------------------------------------
-bool set_c_mod_pos(mavros_msgs::SkyeCMode::Request &req,
+bool set_pos_c_mod(mavros_msgs::SkyeCMode::Request &req,
                   mavros_msgs::SkyeCMode::Response &res){
 
   bool send_new_mode = false;
@@ -327,12 +327,12 @@ bool set_c_mod_pos(mavros_msgs::SkyeCMode::Request &req,
       str_msg = "[skye_talker]: specified mode in POS_C_MOD request is not valid";
       send_new_mode = false;
       break;
-    }
+  }
 
 
   if(send_new_mode){
-      set_parameter("C_MOD_POS", req.mode);
-    }
+    set_parameter("POS_C_MOD", req.mode);
+  }
 
   ROS_INFO_STREAM(str_msg);
 
