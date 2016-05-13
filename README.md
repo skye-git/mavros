@@ -106,7 +106,7 @@ sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
 ```
 
 ###Usage
-To launch the HIL simulation identify to which USB port Mavlink is communicationg and then type in a new terminal
+To launch the HIL simulation identify to which USB port Mavlink is communicating and then type in a new terminal
 ```bash
 roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200
 ```
