@@ -225,12 +225,13 @@ void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
   float linear_x, linear_y, linear_z; // linear velocities
   float angular_x, angular_y, angular_z; // angular velocities
 
+  // adapt input to Skye's local NED frame
   linear_x = static_cast<float>(twist_teleop->linear.x);
-  linear_y = static_cast<float>(twist_teleop->linear.y);
-  linear_z = static_cast<float>(twist_teleop->linear.z);
+  linear_y = -static_cast<float>(twist_teleop->linear.y);
+  linear_z = -static_cast<float>(twist_teleop->linear.z);
   angular_x = static_cast<float>(twist_teleop->angular.x);
-  angular_y = static_cast<float>(twist_teleop->angular.y);
-  angular_z = static_cast<float>(twist_teleop->angular.z);
+  angular_y = -static_cast<float>(twist_teleop->angular.y);
+  angular_z = -static_cast<float>(twist_teleop->angular.z);
 
   uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
@@ -371,9 +372,9 @@ bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
   outer_i = req.outer_i;
   inner_p = req.inner_p;
 
-  set_parameter("SKYE_OUTER_P", outer_p);
-  set_parameter("SKYE_OUTER_I", outer_i);
-  set_parameter("SKYE_INNER_P", inner_p);
+  set_parameter("POS_OUTER_P", outer_p);
+  set_parameter("POS_OUTER_I", outer_i);
+  set_parameter("POS_INNER_P", inner_p);
 
   res.success = true;
 
