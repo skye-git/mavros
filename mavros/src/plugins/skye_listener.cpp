@@ -15,7 +15,9 @@
 #include <geometry_msgs/Vector3Stamped.h>
 
 #include "mavros/skye_base.h"
-#include "skye_ros/ApplyWrenchCogBf.h"
+//#include "skye_ros/ApplyWrenchCogBf.h"
+#include "skye_ros/ApplyForceBf.h"
+#include "skye_ros/ApplyTorqueBf.h"
 #include "skye_ros/AllocatorOutput.h"
 
 #define DEG_TO_RAD M_PI / 180.0
@@ -83,32 +85,26 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   torque_pub.publish(vector3_msg);
 
   // apply the torque to Gazebo
-  skye_ros::ApplyWrenchCogBf  srv;
+  skye_ros::ApplyTorqueBf  srv;
 
-  // the set wrench force to 0. This is a relative force added to the force which is
+  // the set torque. This is a relative torque added to the torque which is
   // already applied ot the body.
-  srv.request.wrench.force.x = 0.0;
-  srv.request.wrench.force.y = 0.0;
-  srv.request.wrench.force.z = 0.0;
-
-  // the set wrench torque. This is a relative torque added to the torque which is
-  // already applied ot the body.
-  srv.request.wrench.torque.x = attiude_ctrl_output.M_x;
-  srv.request.wrench.torque.y = attiude_ctrl_output.M_y;
-  srv.request.wrench.torque.z = attiude_ctrl_output.M_z;
+  srv.request.torque.x = attiude_ctrl_output.M_x;
+  srv.request.torque.y = attiude_ctrl_output.M_y;
+  srv.request.torque.z = attiude_ctrl_output.M_z;
 
   srv.request.start_time = ros::Time::now();
   srv.request.duration = ros::Duration(WRENCH_DURATION_S);
 
   // call service if available
-  /*if(skye_base.isBodyWrenchAvail()){
-    if(skye_base.setBodyWrench(srv)){
+  if(skye_base.isBodyTorqueAvail()){
+    if(skye_base.setBodyTorque(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
-      ROS_ERROR("[skye_listener] Failed to apply body wrench");
+      ROS_ERROR("[skye_listener] Failed to apply body torque");
     }
-  }*/
+  }
 
 }
 
@@ -132,30 +128,24 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   force_pub.publish(vector3_msg);
 
   // apply the force to Gazebo
-  skye_ros::ApplyWrenchCogBf  srv;
+  skye_ros::ApplyForceBf  srv;
 
-  // the set wrench force. This is a relative force added to the force which is
+  // the set force. This is a relative force added to the force which is
   // already applied ot the body.
-  srv.request.wrench.force.x = position_ctrl_output.F_x;
-  srv.request.wrench.force.y = position_ctrl_output.F_y;
-  srv.request.wrench.force.z = position_ctrl_output.F_z;
-
-  // the set wrench troque to 0. This is a relative torque added to the torque which is
-  // already applied ot the body.
-  srv.request.wrench.torque.x = 0.0;
-  srv.request.wrench.torque.y = 0.0;
-  srv.request.wrench.torque.z = 0.0;
+  srv.request.force.x = position_ctrl_output.F_x;
+  srv.request.force.y = position_ctrl_output.F_y;
+  srv.request.force.z = position_ctrl_output.F_z;
 
   srv.request.start_time = ros::Time::now();
   srv.request.duration = ros::Duration(WRENCH_DURATION_S);
 
   // call service if available
-  if(skye_base.isBodyWrenchAvail()){
-    if(skye_base.setBodyWrench(srv)){
+  if(skye_base.isBodyForceAvail()){
+    if(skye_base.setBodyForce(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
-      ROS_ERROR("[skye_listener] Failed to apply body wrench");
+      ROS_ERROR("[skye_listener] Failed to apply body force");
     }
   }
 

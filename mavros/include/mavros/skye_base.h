@@ -12,6 +12,8 @@
 #include <string.h>
 
 #include "skye_ros/ApplyWrenchCogBf.h"
+#include "skye_ros/ApplyForceBf.h"
+#include "skye_ros/ApplyTorqueBf.h"
 #include "skye_ros/ApplyForce2DCogBf.h"
 
 namespace skye_base
@@ -21,30 +23,57 @@ class SkyeBase{
 
 public:
   SkyeBase();
+
   /**
    * @brief Get topic name of IMU data
    */
   std::string getImuTopicName();
+
   /**
    * @brief Set body wrench in the CoG of the hull. Wrench expressed in body frame.
    */
   bool setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv);
+
+  /**
+   * @brief Set body force in the CoG of the hull. Force expressed in body frame.
+   */
+  bool setBodyForce(skye_ros::ApplyForceBf &force_srv);
+
+  /**
+   * @brief Set body torque in the CoG of the hull. Torque expressed in body frame.
+   */
+  bool setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv);
+
   /**
    * @brief Set 2D force in the specified AU number: 0 to au_number in yalm file.
    */
   bool setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index);
+
   /**
    * @brief Check if body wrench service is available.
    */
   bool isBodyWrenchAvail();
+
+  /**
+   * @brief Check if body force service is available.
+   */
+  bool isBodyForceAvail();
+
+  /**
+   * @brief Check if body torque service is available.
+   */
+  bool isBodyTorqueAvail();
+
   /**
    * @brief Check if au force 2D service is available.
    */
   bool isAuForce2DAvail();
+
   /**
    * @brief Check if au force 2D service is available.
    */
   bool isAuForce2DAvail(const int &au_index);
+
   /**
    * @brief Get number of AUs.
    */
@@ -62,11 +91,16 @@ protected:
   std::string au_base_name_;   // base name of AU used to form complete name when calling service
   std::string hull_name_;     // name of the hull in Gazebo used to form complete name when calling service
   std::string apply_wrench_service_name_;   
-  std::vector<std::string> apply_au_force_service_name_; 
+  std::vector<std::string> apply_au_force_service_name_;
+  std::string apply_force_service_name_;
+  std::string apply_torque_service_name_;
   int au_number_;
   // service client
   ros::ServiceClient apply_wrench_hull_cog_; // server to apply a wrench expressed in Skye's body frame 
+  ros::ServiceClient apply_force_hull_cog_; // server to apply a force expressed in Skye's body frame
+  ros::ServiceClient apply_torque_hull_cog_; // server to apply a torque expressed in Skye's body frame
   std::vector<ros::ServiceClient> apply_au_force_2d_; // server vector to apply 2D forces to AUs
+  //std::vector<ros::ServiceClient> apply_au_force_2d_; // server vector to apply 2D forces to AUs
 };
 
 

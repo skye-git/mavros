@@ -25,6 +25,12 @@ SkyeBase::SkyeBase() : nh_("~") {
     apply_au_force_service_name_.push_back("/skye_gz/" + au_base_name_ + std::to_string(i+1) + "/apply_force_2D");
     apply_au_force_2d_.push_back(nh_.serviceClient<skye_ros::ApplyForce2DCogBf>(apply_au_force_service_name_[i]));
   }
+
+  apply_force_service_name_ = "/skye_gz/" + hull_name_ + "/apply_force";
+  apply_force_hull_cog_ = nh_.serviceClient<skye_ros::ApplyForceBf>(apply_force_service_name_);
+
+  apply_torque_service_name_ = "/skye_gz/" + hull_name_ + "/apply_torque";
+  apply_torque_hull_cog_ = nh_.serviceClient<skye_ros::ApplyTorqueBf>(apply_torque_service_name_);
   
 }
 
@@ -38,6 +44,24 @@ bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
   // check service is available
   if(isBodyWrenchAvail()) // check if service is available
     return apply_wrench_hull_cog_.call(wrench_srv);
+  else
+    return false; // service not available
+}
+
+//-----------------------------------------------------------------------------
+bool SkyeBase::setBodyForce(skye_ros::ApplyForceBf &force_srv){
+  // check service is available
+  if(isBodyForceAvail()) // check if service is available
+    return apply_force_hull_cog_.call(force_srv);
+  else
+    return false; // service not available
+}
+
+//-----------------------------------------------------------------------------
+bool SkyeBase::setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv){
+  // check service is available
+  if(isBodyTorqueAvail()) // check if service is available
+    return apply_torque_hull_cog_.call(torque_srv);
   else
     return false; // service not available
 }
@@ -57,6 +81,16 @@ bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int 
 //-----------------------------------------------------------------------------
 bool SkyeBase::isBodyWrenchAvail(){
   return ros::service::exists(apply_wrench_service_name_, false);
+}
+
+//-----------------------------------------------------------------------------
+bool SkyeBase::isBodyForceAvail(){
+  return ros::service::exists(apply_force_service_name_, false);
+}
+
+//-----------------------------------------------------------------------------
+bool SkyeBase::isBodyTorqueAvail(){
+  return ros::service::exists(apply_torque_service_name_, false);
 }
 
 //-----------------------------------------------------------------------------
