@@ -23,6 +23,7 @@
 #include <gazebo_msgs/LinkState.h>
 #include <geometry_msgs/Twist.h>
 #include <mavros_msgs/SetSkyePosCtrlParms.h>
+#include <std_srvs/Empty.h>
 
 namespace mavplugin {
 
@@ -99,6 +100,9 @@ void initialize(UAS &uas_){
   set_skye_pos_ctrl_srv = nh.advertiseService("/skye_mr/set_param/pos_ctrl",
                                               &SkyeTalkerPlugin::set_skye_pos_ctrl_params, this);
 
+  send_step_x_srv = nh.advertiseService("/skye_mr/send_step_x",
+                                        &SkyeTalkerPlugin::send_step_x, this);
+
   skye_ros_ground_truth_sub = nh.subscribe("/skye_ros/ground_truth/hull",
                                            10,
                                            &SkyeTalkerPlugin::ground_truth_callback, this);
@@ -106,6 +110,9 @@ void initialize(UAS &uas_){
   joystick_teleoperate_sub = nh.subscribe("/spacenav/twist",
                                           10,
                                           &SkyeTalkerPlugin::joystick_teleop_callback, this);
+  user_setpoint_pub = nh.advertise<geometry_msgs::Twist>("/skye_mr/user_setpoint", 10);
+
+  sending_step_command = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -133,7 +140,24 @@ private:
   ros::ServiceServer set_c_mod_att_srv; // service to set C_MOD_ATT parameter in px4
   ros::ServiceServer set_skye_param_srv; // service to set a parameter in px4
   ros::ServiceServer set_skye_pos_ctrl_srv; // service to set a position controller parameters in px4
+  ros::ServiceServer send_step_x_srv; // service to send a step velocity command on the x axis for 2 seconds
+  ros::Publisher user_setpoint_pub; /*< user setpoint sent to px4. */
   bool received_first_heartbit;
+  bool sending_step_command;
+
+//-----------------------------------------------------------------------------
+/* Custom function to obtain euler angles (rotation order ZYX) in local axis.
+ * This function is returns roll in (-pi,pi), pitch in (-pi/2,-pi/2) and yaw in (-pi,pi).
+ * Use this function instead of Eigen::eulerAngles(2, 1, 0) because Eigen's version
+ * returns yaw in (0,-pi).
+*/
+void skye_quat_to_eu(const Eigen::Quaterniond q, float &roll, float &pitch, float &yaw){
+  Eigen::Matrix3d m(q);
+
+  roll = atan2(m(2,1), m(2,2));
+  pitch = atan2(-m(2,0), sqrt(m(2,1) * m(2,1) + m(2,2) * m(2,2)));
+  yaw = atan2(m(1,0), m(0,0));
+}
 
 //-----------------------------------------------------------------------------
 void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
@@ -150,10 +174,13 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
   q_imu.y() = imu_sk_p->orientation.y;
   q_imu.z() = imu_sk_p->orientation.z;
 
-  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
-  roll = static_cast<float>(euler_angles[2]);
-  pitch = static_cast<float>(euler_angles[1]);
-  yaw = static_cast<float>(euler_angles[0]);
+//  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
+// The above fcn return a yaw angle in [0,pi], we need yaw in [-pi,pi]
+//  roll = static_cast<float>(euler_angles[2]);
+//  pitch = static_cast<float>(euler_angles[1]);
+//  yaw = static_cast<float>(euler_angles[0]);
+
+  skye_quat_to_eu(q_imu, roll, pitch, yaw);
 
   rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
   pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
@@ -177,6 +204,37 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
                                           yawspeed,
                                           q);
   UAS_FCU(uas)->send_message(&msg);
+}
+
+//-----------------------------------------------------------------------------
+void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
+  mavlink_message_t msg;
+  float linear_x, linear_y, linear_z; // linear velocities
+  float angular_x, angular_y, angular_z; // angular velocities
+
+  // adapt input to Skye's local NED frame
+  linear_x = static_cast<float>(ptwist->linear.x);
+  linear_y = -static_cast<float>(ptwist->linear.y);
+  linear_z = -static_cast<float>(ptwist->linear.z);
+  angular_x = static_cast<float>(ptwist->angular.x);
+  angular_y = -static_cast<float>(ptwist->angular.y);
+  angular_z = -static_cast<float>(ptwist->angular.z);
+
+  uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+
+  /* Send the skye_attitude_hil message to Skye. */
+  mavlink_msg_setpoint_6dof_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                      timestamp,
+                                      linear_x,
+                                      linear_y,
+                                      linear_z,
+                                      angular_x,
+                                      angular_y,
+                                      angular_z);
+
+  UAS_FCU(uas)->send_message(&msg);
+
+  user_setpoint_pub.publish(*ptwist);
 }
 
 //-----------------------------------------------------------------------------
@@ -221,39 +279,8 @@ void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
 //-----------------------------------------------------------------------------
 void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 
-  mavlink_message_t msg;
-  float linear_x, linear_y, linear_z; // linear velocities
-  float angular_x, angular_y, angular_z; // angular velocities
-
-  // adapt input to Skye's local NED frame
-  linear_x = static_cast<float>(twist_teleop->linear.x);
-  linear_y = -static_cast<float>(twist_teleop->linear.y);
-  linear_z = -static_cast<float>(twist_teleop->linear.z);
-  angular_x = static_cast<float>(twist_teleop->angular.x);
-  angular_y = -static_cast<float>(twist_teleop->angular.y);
-  angular_z = -static_cast<float>(twist_teleop->angular.z);
-
-  uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
-
-  /* Send the skye_attitude_hil message to Skye. */
-  mavlink_msg_setpoint_6dof_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                      timestamp,
-                                      linear_x,
-                                      linear_y,
-                                      linear_z,
-                                      angular_x,
-                                      angular_y,
-                                      angular_z);
-  //TODO delete me
-  /*ROS_INFO("Teleop: \nlinear[%f, %f, %f] \n angular[%f, %f, %f] \n",
-           linear_x,
-           linear_y,
-           linear_z,
-           angular_x,
-           angular_y,
-           angular_z);*/
-
-  UAS_FCU(uas)->send_message(&msg);
+  if(!sending_step_command) //only if step service is not being using
+    send_user_setpoint(twist_teleop);
 }
 
 //-----------------------------------------------------------------------------
@@ -379,6 +406,45 @@ bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
   res.success = true;
 
   ROS_INFO("[skye_talker] new pos ctrl parameters: %f, %f, %f", outer_p, outer_i, inner_p);
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool send_step_x(std_srvs::Empty::Request &req,
+                 std_srvs::Empty::Response &res){
+
+  //make sure we are in controlled mode within position controller
+  set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
+
+  //send 1 in X direction for 5 seconds
+  ros::Time begin = ros::Time::now();
+  ros::Duration d(5.0);
+  ros::Rate r(50); // 50 hz
+  mavlink_message_t msg;
+  geometry_msgs::TwistPtr pt(new geometry_msgs::Twist());
+
+
+  pt->linear.x = 1.0;
+  pt->linear.y = 0.0;
+  pt->linear.z = 0.0;
+
+  pt->angular.x = 0.0;
+  pt->angular.y = 0.0;
+  pt->angular.z = 0.0;
+
+  sending_step_command = true;
+  ROS_INFO("[skye_talker] sending step command in linear_x");
+
+  while(ros::Time::now() <= (begin + d)){
+
+    send_user_setpoint(pt);
+
+    r.sleep();
+  }
+
+  sending_step_command = false;
+  ROS_INFO("[skye_talker] sent step command in linear_x");
 
   return true;
 }
