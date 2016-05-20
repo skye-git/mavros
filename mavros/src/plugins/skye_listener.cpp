@@ -41,6 +41,7 @@ void initialize(UAS &uas_){
   torque_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
   allocator_output_pub = nh.advertise<skye_ros::AllocatorOutput>("/skye_px4/allocator_output", 10);
   force_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/position_ctrl_output", 10);
+  debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
 
   time_last_pos_ctrl_out = time_last_att_ctrl_out = ros::Time::now();
@@ -51,7 +52,8 @@ const message_map get_rx_handlers(){
   return {
     MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeListenerPlugin::handle_att_ctrl_out),
     MESSAGE_HANDLER(MAVLINK_MSG_ID_ALLOCATION_OUTPUT, &SkyeListenerPlugin::handle_allocator_out),
-    MESSAGE_HANDLER(MAVLINK_MSG_ID_POSITION_CTRL_OUTPUT, &SkyeListenerPlugin::handle_pos_ctrl_out)
+    MESSAGE_HANDLER(MAVLINK_MSG_ID_POSITION_CTRL_OUTPUT, &SkyeListenerPlugin::handle_pos_ctrl_out),
+    MESSAGE_HANDLER(MAVLINK_MSG_ID_SKYE_DEBUG_VEC3, &SkyeListenerPlugin::handle_debug_vec3)
   };
 }
 
@@ -64,6 +66,7 @@ private:
   ros::Publisher torque_pub; /*< attitide controller output torque in to be applied in the CoG. */
   ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
   ros::Publisher force_pub; /*< position controller output force. */
+  ros::Publisher debug_vec3_pub; /*< debug vector publisher. */
   skye_base::SkyeBase skye_base;
 
   //"last time" variables
@@ -212,6 +215,24 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   allocator_output_pub.publish(alocator_out_msg);
 }
 
+//-----------------------------------------------------------------------------
+void handle_debug_vec3(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
+  mavlink_skye_debug_vec3_t debug_vec3;
+  mavlink_msg_skye_debug_vec3_decode(msg, &debug_vec3);
+
+  auto vector3_msg = boost::make_shared<geometry_msgs::Vector3Stamped>();
+
+  // fill
+  vector3_msg->header.seq = seq_id++;
+  vector3_msg->header.stamp = ros::Time::now();
+  vector3_msg->header.frame_id = "0";
+  vector3_msg->vector.x = debug_vec3.x;
+  vector3_msg->vector.y = debug_vec3.y;
+  vector3_msg->vector.z = debug_vec3.z;
+
+  // publish
+  debug_vec3_pub.publish(vector3_msg);
+}
 
 };
 };	// namespace mavplugin
