@@ -288,26 +288,37 @@ bool set_att_c_mod(mavros_msgs::SkyeCMode::Request &req,
                   mavros_msgs::SkyeCMode::Response &res){
 
   bool send_new_mode = false;
-  int new_c_mode = -1;
   std::string str_msg = "";
 
   // check mode is either MANUAL, 5DOF or 6DOF
   switch(req.mode){
     case SKYE_ATT_C_MOD_MANUAL:
-      new_c_mode = SKYE_ATT_C_MOD_MANUAL;
       str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_MANUAL";
       send_new_mode = true;
       break;
 
     case SKYE_ATT_C_MOD_5_DOF:
-      new_c_mode = SKYE_ATT_C_MOD_5_DOF;
       str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_5_DOF";
       send_new_mode = true;
       break;
 
     case SKYE_ATT_C_MOD_6_DOF:
-      new_c_mode = SKYE_ATT_C_MOD_6_DOF;
       str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_6_DOF";
+      send_new_mode = true;
+      break;
+
+    case SKYE_ATT_C_MOD_6_DOFI:
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_6_DOFI";
+      send_new_mode = true;
+      break;
+
+    case SKYE_ATT_C_MOD_GEOM:
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_GEOM";
+      send_new_mode = true;
+      break;
+
+    case SKYE_ATT_C_MOD_MAX:
+      str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_MAX";
       send_new_mode = true;
       break;
 
