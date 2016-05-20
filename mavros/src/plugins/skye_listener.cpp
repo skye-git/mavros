@@ -21,8 +21,7 @@
 #include "skye_ros/AllocatorOutput.h"
 
 #define DEG_TO_RAD M_PI / 180.0
-#define WRENCH_DURATION_S 1.0 / 50.0 // controllers run at 50 Hz
-
+const int duration_multiplier = 5;
 namespace mavplugin {
 
 /**
@@ -43,6 +42,8 @@ void initialize(UAS &uas_){
   allocator_output_pub = nh.advertise<skye_ros::AllocatorOutput>("/skye_px4/allocator_output", 10);
   force_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/position_ctrl_output", 10);
   seq_id = 0;
+
+  time_last_pos_ctrl_out = time_last_att_ctrl_out = ros::Time::now();
 }
 
 //-----------------------------------------------------------------------------
@@ -64,6 +65,10 @@ private:
   ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
   ros::Publisher force_pub; /*< position controller output force. */
   skye_base::SkyeBase skye_base;
+
+  //"last time" variables
+  ros::Time time_last_pos_ctrl_out;
+  ros::Time time_last_att_ctrl_out;
 
 //-----------------------------------------------------------------------------
 void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
@@ -87,14 +92,20 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   // apply the torque to Gazebo
   skye_ros::ApplyTorqueBf  srv;
 
-  // the set torque. This is a relative torque added to the torque which is
-  // already applied ot the body.
+  // set torque, it's applied relative to the link's frame
   srv.request.torque.x = attiude_ctrl_output.M_x;
   srv.request.torque.y = attiude_ctrl_output.M_y;
   srv.request.torque.z = attiude_ctrl_output.M_z;
 
   srv.request.start_time = ros::Time::now();
-  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
+
+  /* Torque application duration should be greater than the actual
+   * time elapsed between two consecutive requests of torque application, otherwise
+   * when "torque_duration" is elapsed torque's components go to 0.
+   * Use the time difference between last two questes as estimate of next time
+   * difference. Multuple by duration_multiplier to increase the estimated duration.
+   */
+  srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * duration_multiplier;
 
   // call service if available
   if(skye_base.isBodyTorqueAvail()){
@@ -105,6 +116,8 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
       ROS_ERROR("[skye_listener] Failed to apply body torque");
     }
   }
+
+  time_last_att_ctrl_out = srv.request.start_time;
 
 }
 
@@ -130,14 +143,20 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   // apply the force to Gazebo
   skye_ros::ApplyForceBf  srv;
 
-  // the set force. This is a relative force added to the force which is
-  // already applied ot the body.
+  // set force, it's applied relative to the link's frame
   srv.request.force.x = position_ctrl_output.F_x;
   srv.request.force.y = position_ctrl_output.F_y;
   srv.request.force.z = position_ctrl_output.F_z;
 
   srv.request.start_time = ros::Time::now();
-  srv.request.duration = ros::Duration(WRENCH_DURATION_S);
+
+  /* Force application duration should be greater than the actual
+   * time elapsed between two consecutive requests of force application, otherwise
+   * when "force_duration" is elapsed force's components go to 0.
+   * Use the time difference between last two questes as estimate of next time
+   * difference. Multuple by duration_multiplier to increase the estimated duration.
+   */
+  srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * duration_multiplier;
 
   // call service if available
   if(skye_base.isBodyForceAvail()){
@@ -148,6 +167,8 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
       ROS_ERROR("[skye_listener] Failed to apply body force");
     }
   }
+
+  time_last_pos_ctrl_out = srv.request.start_time;
 
 }
 
@@ -175,7 +196,7 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     alocator_out_msg->angle[i] = allocator_output.angle[i];
 
     srv.request.start_time = ros::Time::now();
-    srv.request.duration = ros::Duration(WRENCH_DURATION_S);
+    //srv.request.duration = ros::Duration(WRENCH_DURATION_S); //TODO change with last_time_...
     // call service if available
     /*if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
         if(skye_base.setAuForce2D(srv, i)){
