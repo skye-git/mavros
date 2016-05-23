@@ -99,6 +99,8 @@ cd ~/catkin_ws
 catkin build --cmake-args -DMAVLINK_DIALECT=skye
 ```
 
+**Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must hard copy the latest version of the skye.xml file, as explained above, and compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect everytime you compile the mavlink repo used by mavros.
+
 #### Troubleshooting
 In case of `CMake Error: Could not find a package configuration file provided by "control_toolbox"`, please install the following packages:
 ```bash
@@ -115,7 +117,7 @@ In the above example Mavlink is using USB0. This launch files starts Gazebo in p
 ####Changing Fimrware Parameter
 During HIL simulation it is not possible to change onboard paramters via QGroundControl. The above list of services show how to change onboard parameters.
 
-  * /skye_mr/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF);
+  * /skye_mr/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF), 3 (6DOFI), 4 (SKYE_ATT_C_MOD_GEOM), 5 (SKYE_ATT_C_MOD_MAX);
   * /skye_mr/set_pos_c_mod sets the position control mode. Possible values: 0 (Manual), 1 (cascade pid);
   * /skye_mr/set_param to set any onboard parameters, either if it's integer or float.
   
