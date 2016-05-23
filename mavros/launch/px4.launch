@@ -7,10 +7,12 @@
 	<arg name="tgt_system" default="1" />
 	<arg name="tgt_component" default="1" />
 	<arg name="log_output" default="screen" />
+ <arg name="skye_configuration" default="$(find mavros)/launch/skye_configuration.yaml" />
 
 	<include file="$(find mavros)/launch/node.launch">
 		<arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
 		<arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
+  <arg name="skye_configuration" value="$(arg skye_configuration)" />
 
 		<arg name="fcu_url" value="$(arg fcu_url)" />
 		<arg name="gcs_url" value="$(arg gcs_url)" />

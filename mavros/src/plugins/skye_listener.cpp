@@ -10,18 +10,17 @@
 
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
-
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3Stamped.h>
 
 #include "mavros/skye_base.h"
-//#include "skye_ros/ApplyWrenchCogBf.h"
 #include "skye_ros/ApplyForceBf.h"
 #include "skye_ros/ApplyTorqueBf.h"
 #include "skye_ros/AllocatorOutput.h"
 
-#define DEG_TO_RAD M_PI / 180.0
-const int duration_multiplier = 5;
+static const double kDegToRad = M_PI / 180.0;
+static const int kDurationMultiplier = 5;
+
 namespace mavplugin {
 
 /**
@@ -108,7 +107,7 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    * Use the time difference between last two questes as estimate of next time
    * difference. Multuple by duration_multiplier to increase the estimated duration.
    */
-  srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * duration_multiplier;
+  srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
 
   // call service if available
   if(skye_base.isBodyTorqueAvail()){
@@ -159,7 +158,7 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    * Use the time difference between last two questes as estimate of next time
    * difference. Multuple by duration_multiplier to increase the estimated duration.
    */
-  srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * duration_multiplier;
+  srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier;
 
   // call service if available
   if(skye_base.isBodyForceAvail()){
@@ -192,8 +191,8 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   skye_ros::ApplyForce2DCogBf  srv;
 
   for(int i = 0; i < skye_base.getAuNumber(); i++){
-    srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * DEG_TO_RAD);
-    srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * DEG_TO_RAD);
+    srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * kDegToRad);
+    srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
 
     alocator_out_msg->thrust[i] = allocator_output.thrust[i];
     alocator_out_msg->angle[i] = allocator_output.angle[i];

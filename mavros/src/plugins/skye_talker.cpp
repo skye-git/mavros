@@ -9,13 +9,11 @@
 
 #include <cmath>
 
-#include <mavros/mavros_plugin.h>
-#include <pluginlib/class_list_macros.h>
 #include <Eigen/Geometry>
-#include "mavros/skye_base.h"
 #include <ros/console.h>
 #include <boost/any.hpp>
-
+#include <mavros/mavros_plugin.h>
+#include <pluginlib/class_list_macros.h>
 
 #include <sensor_msgs/Imu.h>
 #include <mavros_msgs/SkyeCMode.h>
@@ -24,6 +22,8 @@
 #include <geometry_msgs/Twist.h>
 #include <mavros_msgs/SetSkyePosCtrlParms.h>
 #include <std_srvs/Empty.h>
+
+#include "mavros/skye_base.h"
 
 namespace mavplugin {
 
@@ -147,13 +147,13 @@ private:
 
 //-----------------------------------------------------------------------------
 /* Custom function to obtain euler angles (rotation order ZYX) in local axis.
- * This function is returns roll in (-pi,pi), pitch in (-pi/2,-pi/2) and yaw in (-pi,pi).
+ * This function returns roll in (-pi,pi), pitch in (-pi/2,-pi/2) and yaw in (-pi,pi).
  * Use this function instead of Eigen::eulerAngles(2, 1, 0) because Eigen's version
  * returns yaw in (0,-pi).
 */
 void skye_quat_to_eu(const Eigen::Quaterniond q, float &roll, float &pitch, float &yaw){
-  Eigen::Matrix3d m(q);
 
+  Eigen::Matrix3d m(q);
   roll = atan2(m(2,1), m(2,2));
   pitch = atan2(-m(2,0), sqrt(m(2,1) * m(2,1) + m(2,2) * m(2,2)));
   yaw = atan2(m(1,0), m(0,0));
@@ -290,7 +290,7 @@ bool set_att_c_mod(mavros_msgs::SkyeCMode::Request &req,
   bool send_new_mode = false;
   std::string str_msg = "";
 
-  // check mode is either MANUAL, 5DOF or 6DOF
+  // check mode is valid in according to SKYE_ATT_C_MOD in skye.h
   switch(req.mode){
     case SKYE_ATT_C_MOD_MANUAL:
       str_msg = "[skye_talker]: ATT_C_MOD switched to SKYE_ATT_C_MOD_MANUAL";
@@ -328,7 +328,6 @@ bool set_att_c_mod(mavros_msgs::SkyeCMode::Request &req,
       break;
   }
 
-
   if(send_new_mode){
     set_parameter("ATT_C_MOD", req.mode);
   }
@@ -345,19 +344,16 @@ bool set_pos_c_mod(mavros_msgs::SkyeCMode::Request &req,
                   mavros_msgs::SkyeCMode::Response &res){
 
   bool send_new_mode = false;
-  int new_c_mode = -1;
   std::string str_msg = "";
 
-  // check mode is either MANUAL or CASCADE
+  // check mode is valid in according to SKYE_POS_C_MOD in skye.h
   switch(req.mode){
     case SKYE_POS_C_MOD_MANUAL:
-      new_c_mode = SKYE_POS_C_MOD_MANUAL;
       str_msg = "[skye_talker]: POS_C_MOD switched to SKYE_POS_C_MOD_MANUAL";
       send_new_mode = true;
       break;
 
     case SKYE_POS_C_MOD_CASCADE_PID:
-      new_c_mode = SKYE_POS_C_MOD_CASCADE_PID;
       str_msg = "[skye_talker]: POS_C_MOD switched to SKYE_POS_C_MOD_CASCADE_PID";
       send_new_mode = true;
       break;
@@ -367,7 +363,6 @@ bool set_pos_c_mod(mavros_msgs::SkyeCMode::Request &req,
       send_new_mode = false;
       break;
   }
-
 
   if(send_new_mode){
     set_parameter("POS_C_MOD", req.mode);
