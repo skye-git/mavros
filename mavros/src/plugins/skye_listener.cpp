@@ -43,7 +43,7 @@ void initialize(UAS &uas_){
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
 
-  time_last_pos_ctrl_out = time_last_att_ctrl_out = ros::Time::now();
+  time_last_pos_ctrl_out = time_last_att_ctrl_out = time_last_allocator_out = ros::Time::now();
 }
 
 //-----------------------------------------------------------------------------
@@ -71,6 +71,7 @@ private:
   //"last time" variables
   ros::Time time_last_pos_ctrl_out;
   ros::Time time_last_att_ctrl_out;
+  ros::Time time_last_allocator_out;
 
 //-----------------------------------------------------------------------------
 void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
@@ -110,14 +111,14 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
 
   // call service if available
-  if(skye_base.isBodyTorqueAvail()){
+  /*if(skye_base.isBodyTorqueAvail()){
     if(skye_base.setBodyTorque(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
       ROS_ERROR("[skye_listener] Failed to apply body torque");
     }
-  }
+  }*/
 
   time_last_att_ctrl_out = srv.request.start_time;
 
@@ -161,14 +162,14 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier;
 
   // call service if available
-  if(skye_base.isBodyForceAvail()){
+  /*if(skye_base.isBodyForceAvail()){
     if(skye_base.setBodyForce(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
       ROS_ERROR("[skye_listener] Failed to apply body force");
     }
-  }
+  }*/
 
   time_last_pos_ctrl_out = srv.request.start_time;
 
@@ -189,29 +190,59 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   alocator_out_msg->header.frame_id = "0";
 
   skye_ros::ApplyForce2DCogBf  srv;
+  srv.request.start_time = ros::Time::now();
+
+  /* Force application duration should be greater than the actual
+   * time elapsed between two consecutive requests of force application, otherwise
+   * when "force_duration" is elapsed force's components go to 0.
+   * Use the time difference between last two questes as estimate of next time
+   * difference. Multuple by duration_multiplier to increase the estimated duration.
+   */
+  srv.request.duration = (srv.request.start_time - time_last_allocator_out) * kDurationMultiplier;
 
   for(int i = 0; i < skye_base.getAuNumber(); i++){
     srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * kDegToRad);
-    srv.request.Fx = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
+    srv.request.Fy = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
 
     alocator_out_msg->thrust[i] = allocator_output.thrust[i];
     alocator_out_msg->angle[i] = allocator_output.angle[i];
 
-    srv.request.start_time = ros::Time::now();
-    //srv.request.duration = ros::Duration(WRENCH_DURATION_S); //TODO change with last_time_...
+    //TODO delete me
+    static int count = 0;
+    static int max_count = 75;
+
+    if(count >= max_count){
+
+      ROS_INFO("\n------------------------------------");
+      for(int j = 0; j < skye_base.getAuNumber(); j++){
+        double Fx = allocator_output.thrust[j] * cos(allocator_output.angle[j] * kDegToRad);
+        double Fy = allocator_output.thrust[j] * sin(allocator_output.angle[j] * kDegToRad);
+
+        ROS_INFO("[%d]  Fx %f \t\t Fy %f", j, Fx, Fy);
+      }
+      ROS_INFO("\n------------------------------------");
+
+      count = 0;
+    }
+    else
+      count++;
+    //TODO end delete me
+
     // call service if available
-    /*if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
-        if(skye_base.setAuForce2D(srv, i)){
-            //ROS_INFO("force applied!");
-        }
-        else{
-            ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
-        }
-      }*/
+    if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
+      if(skye_base.setAuForce2D(srv, i)){
+        //ROS_INFO("force applied!");
+      }
+      else{
+        ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+      }
+    }
   }
 
   // publish
   allocator_output_pub.publish(alocator_out_msg);
+
+  time_last_allocator_out = srv.request.start_time;
 }
 
 //-----------------------------------------------------------------------------
