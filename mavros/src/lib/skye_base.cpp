@@ -13,7 +13,10 @@ namespace skye_base
 {
 
 //-----------------------------------------------------------------------------
-SkyeBase::SkyeBase() : nh_("~") {
+SkyeBase::SkyeBase()
+  :nh_("~"),
+  use_allocator_output_(0)
+{
   // Load parameters from yalm file
   getConfiguraionParams();
 
@@ -42,19 +45,25 @@ std::string SkyeBase::getImuTopicName(){
 //-----------------------------------------------------------------------------
 bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
   // check service is available
-  if(isBodyWrenchAvail()) // check if service is available
-    return apply_wrench_hull_cog_.call(wrench_srv);
-  else
-    return false; // service not available
+  if(isBodyWrenchAvail()){ // check if service is available
+    //check if we can use it
+    if(!use_allocator_output_)
+      return apply_wrench_hull_cog_.call(wrench_srv);
+  }
+
+  return false; // service not available
 }
 
 //-----------------------------------------------------------------------------
 bool SkyeBase::setBodyForce(skye_ros::ApplyForceBf &force_srv){
   // check service is available
-  if(isBodyForceAvail()) // check if service is available
-    return apply_force_hull_cog_.call(force_srv);
-  else
-    return false; // service not available
+  if(isBodyForceAvail()){ // check if service is available
+    //check if we can use it
+    if(!use_allocator_output_)
+      return apply_force_hull_cog_.call(force_srv);
+  }
+
+  return false; // service not available
 }
 
 //-----------------------------------------------------------------------------
@@ -71,11 +80,13 @@ bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int 
   // check service is available & index < number of AUs
   if(isAuForce2DAvail(au_index) && au_index < au_number_){ // check if service is available
     ros::ServiceClient force2D_client = apply_au_force_2d_.at(au_index);
-    return force2D_client.call(force2D_srv);
+
+    //check if we can use it
+    if(use_allocator_output_)
+      return force2D_client.call(force2D_srv);
   }
-  else
-    return false; // service not available
-                
+
+  return false; // service not available
 }
 
 //-----------------------------------------------------------------------------
@@ -110,17 +121,28 @@ bool SkyeBase::isAuForce2DAvail(const int &au_index){
 }
 
 //-----------------------------------------------------------------------------
+bool SkyeBase::useAllocatorOutput(){
+  return use_allocator_output_;
+}
+
+//-----------------------------------------------------------------------------
 void SkyeBase::getConfiguraionParams()
 {
   bool complete_list_params = true;
 
-  complete_list_params &= nh_.getParam("topic_imu_skye", topic_imu_skye_);
-  complete_list_params &= nh_.getParam("au_base_name_gazebo", au_base_name_);
-  complete_list_params &= nh_.getParam("au_number", au_number_);
-  complete_list_params &= nh_.getParam("hull_name_gz", hull_name_);
+  complete_list_params &= nh_.getParam("skye/topic_imu_skye", topic_imu_skye_);
+  complete_list_params &= nh_.getParam("skye/au_base_name_gazebo", au_base_name_);
+  complete_list_params &= nh_.getParam("skye/au_number", au_number_);
+  complete_list_params &= nh_.getParam("skye/hull_name_gz", hull_name_);
+  complete_list_params &= nh_.getParam("skye/use_allocator_output", use_allocator_output_);
 
   if(!complete_list_params)
     ROS_DEBUG("Parameter(s) missing in yaml file.");
+
+  if(use_allocator_output_)
+    ROS_INFO("********** [skye_base] Use allocator output to drive Skye");
+  else
+    ROS_INFO("********** [skye_base] Use directly Attitude and Position controller outputs to drive Skye");
   
 }
 

@@ -76,6 +76,10 @@ private:
 //-----------------------------------------------------------------------------
 void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
 
+  // Should we use attitude controller output instead of allocator output?
+  if(skye_base.useAllocatorOutput())
+    return;
+
   mavlink_attitude_ctrl_output_t attiude_ctrl_output;
   mavlink_msg_attitude_ctrl_output_decode(msg, &attiude_ctrl_output);
 
@@ -111,14 +115,14 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
 
   // call service if available
-  /*if(skye_base.isBodyTorqueAvail()){
+  if(skye_base.isBodyTorqueAvail()){
     if(skye_base.setBodyTorque(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
       ROS_ERROR("[skye_listener] Failed to apply body torque");
     }
-  }*/
+  }
 
   time_last_att_ctrl_out = srv.request.start_time;
 
@@ -126,6 +130,10 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 
 //-----------------------------------------------------------------------------
 void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
+
+  // Should we use position controller output instead of allocator output?
+  if(skye_base.useAllocatorOutput())
+    return;
 
   mavlink_position_ctrl_output_t position_ctrl_output;
   mavlink_msg_position_ctrl_output_decode(msg, &position_ctrl_output);
@@ -162,14 +170,14 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier;
 
   // call service if available
-  /*if(skye_base.isBodyForceAvail()){
+  if(skye_base.isBodyForceAvail()){
     if(skye_base.setBodyForce(srv)){
       //ROS_INFO("wrench applied!");
     }
     else{
       ROS_ERROR("[skye_listener] Failed to apply body force");
     }
-  }*/
+  }
 
   time_last_pos_ctrl_out = srv.request.start_time;
 
@@ -177,6 +185,10 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 
 //-----------------------------------------------------------------------------
 void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
+
+  // Should we use allocator output ?
+  if(!skye_base.useAllocatorOutput())
+    return;
 
   // Apply a 2D force to each AU based on the output of the allocator
   mavlink_allocation_output_t allocator_output;
@@ -208,24 +220,24 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     alocator_out_msg->angle[i] = allocator_output.angle[i];
 
     //TODO delete me
-    static int count = 0;
-    static int max_count = 75;
+//    static int count = 0;
+//    static int max_count = 75;
 
-    if(count >= max_count){
+//    if(count >= max_count){
 
-      ROS_INFO("\n------------------------------------");
-      for(int j = 0; j < skye_base.getAuNumber(); j++){
-        double Fx = allocator_output.thrust[j] * cos(allocator_output.angle[j] * kDegToRad);
-        double Fy = allocator_output.thrust[j] * sin(allocator_output.angle[j] * kDegToRad);
+//      ROS_INFO("\n------------------------------------");
+//      for(int j = 0; j < skye_base.getAuNumber(); j++){
+//        double Fx = allocator_output.thrust[j] * cos(allocator_output.angle[j] * kDegToRad);
+//        double Fy = allocator_output.thrust[j] * sin(allocator_output.angle[j] * kDegToRad);
 
-        ROS_INFO("[%d]  Fx %f \t\t Fy %f", j, Fx, Fy);
-      }
-      ROS_INFO("\n------------------------------------");
+//        ROS_INFO("[%d]  Fx %f \t\t Fy %f", j, Fx, Fy);
+//      }
+//      ROS_INFO("\n------------------------------------");
 
-      count = 0;
-    }
-    else
-      count++;
+//      count = 0;
+//    }
+//    else
+//      count++;
     //TODO end delete me
 
     // call service if available
@@ -243,6 +255,7 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   allocator_output_pub.publish(alocator_out_msg);
 
   time_last_allocator_out = srv.request.start_time;
+
 }
 
 //-----------------------------------------------------------------------------
