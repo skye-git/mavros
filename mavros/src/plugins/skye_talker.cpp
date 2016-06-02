@@ -25,6 +25,11 @@
 
 #include "mavros/skye_base.h"
 
+//debugging
+static int count = 0;
+#define MAX_COUNT 50
+//debugging
+
 namespace mavplugin {
 
   /**
@@ -147,16 +152,20 @@ private:
 
 //-----------------------------------------------------------------------------
 /* Custom function to obtain euler angles (rotation order ZYX) in local axis.
- * This function returns roll in (-pi,pi), pitch in (-pi/2,-pi/2) and yaw in (-pi,pi).
+ * This function returns roll in (-pi,pi), pitch in (-pi/2,pi/2) and yaw in (-pi,pi).
  * Use this function instead of Eigen::eulerAngles(2, 1, 0) because Eigen's version
  * returns yaw in (0,-pi).
 */
 void skye_quat_to_eu(const Eigen::Quaterniond q, float &roll, float &pitch, float &yaw){
 
-  Eigen::Matrix3d m(q);
-  roll = atan2(m(2,1), m(2,2));
-  pitch = atan2(-m(2,0), sqrt(m(2,1) * m(2,1) + m(2,2) * m(2,2)));
-  yaw = atan2(m(1,0), m(0,0));
+//  Eigen::Matrix3d m(q);
+//  roll = atan2(m(2,1), m(2,2));
+//  pitch = atan2(-m(2,0), sqrt(m(2,1) * m(2,1) + m(2,2) * m(2,2)));
+//  yaw = atan2(m(1,0), m(0,0));
+
+  roll = atan2(2.0 * (q.w() * q.x() + q.y() * q.z()), 1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y()));
+  pitch = asin(2.0 * (q.w() * q.y() - q.z() * q.x()));
+  yaw = atan2(2.0 * (q.w() * q.z() + q.x() * q.y()), 1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
 }
 
 //-----------------------------------------------------------------------------
@@ -175,12 +184,22 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
   q_imu.z() = imu_sk_p->orientation.z;
 
 //  Eigen::Vector3d euler_angles = q_imu.matrix().eulerAngles(2, 1, 0); // Tait-Bryan, NED
-// The above fcn return a yaw angle in [0,pi], we need yaw in [-pi,pi]
+// //The above fcn return a yaw angle in [0,pi], we need yaw in [-pi,pi]
 //  roll = static_cast<float>(euler_angles[2]);
 //  pitch = static_cast<float>(euler_angles[1]);
 //  yaw = static_cast<float>(euler_angles[0]);
 
   skye_quat_to_eu(q_imu, roll, pitch, yaw);
+
+  //TODO delete me
+  if(count >= MAX_COUNT){
+    ROS_INFO("yaw: %f, pitch: %f, roll: %f", yaw, pitch, roll);
+    count = 0;
+  }
+  else
+    count++;
+
+  //TODO end delete me
 
   rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
   pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
@@ -421,7 +440,7 @@ bool send_step_x(std_srvs::Empty::Request &req,
                  std_srvs::Empty::Response &res){
 
   //make sure we are in controlled mode within position controller
-  set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
+  //set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
 
   //send 1 in X direction for 5 seconds
   ros::Time begin = ros::Time::now();
