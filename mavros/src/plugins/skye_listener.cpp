@@ -12,6 +12,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <std_srvs/Empty.h>
 
 #include "mavros/skye_base.h"
 #include "skye_ros/ApplyForceBf.h"
@@ -43,6 +44,9 @@ void initialize(UAS &uas_){
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
 
+  /*debug_srv_ = nh.advertiseService("/skye_mr/debug_srv",
+                                   &SkyeListenerPlugin::debug_srv, this);*/
+
   time_last_pos_ctrl_out = time_last_att_ctrl_out = time_last_allocator_out = ros::Time::now();
 }
 
@@ -66,6 +70,7 @@ private:
   ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
   ros::Publisher force_pub; /*< position controller output force. */
   ros::Publisher debug_vec3_pub; /*< debug vector publisher. */
+  //ros::ServiceServer debug_srv_; /*< debugging service. */
   skye_base::SkyeBase skye_base;
 
   //"last time" variables
@@ -194,12 +199,12 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   mavlink_allocation_output_t allocator_output;
   mavlink_msg_allocation_output_decode(msg, &allocator_output);
 
-  auto alocator_out_msg = boost::make_shared<skye_ros::AllocatorOutput>();
+  auto allocator_out_msg = boost::make_shared<skye_ros::AllocatorOutput>();
 
   // fill
-  alocator_out_msg->header.seq = seq_id++;
-  alocator_out_msg->header.stamp = ros::Time::now();
-  alocator_out_msg->header.frame_id = "0";
+  allocator_out_msg->header.seq = seq_id++;
+  allocator_out_msg->header.stamp = ros::Time::now();
+  allocator_out_msg->header.frame_id = "0";
 
   skye_ros::ApplyForce2DCogBf  srv;
   srv.request.start_time = ros::Time::now();
@@ -216,8 +221,8 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * kDegToRad);
     srv.request.Fy = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
 
-    alocator_out_msg->thrust[i] = allocator_output.thrust[i];
-    alocator_out_msg->angle[i] = allocator_output.angle[i];
+    allocator_out_msg->thrust[i] = allocator_output.thrust[i];
+    allocator_out_msg->angle[i] = allocator_output.angle[i];
 
     //TODO delete me
 //    static int count = 0;
@@ -252,7 +257,7 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   }
 
   // publish
-  allocator_output_pub.publish(alocator_out_msg);
+  allocator_output_pub.publish(allocator_out_msg);
 
   time_last_allocator_out = srv.request.start_time;
 
@@ -276,6 +281,117 @@ void handle_debug_vec3(const mavlink_message_t *msg, uint8_t sysid, uint8_t comp
   // publish
   debug_vec3_pub.publish(vector3_msg);
 }
+
+//-----------------------------------------------------------------------------
+/*bool debug_srv(std_srvs::Empty::Request &req,
+               std_srvs::Empty::Response &res){
+
+
+  static ros::ServiceClient apply_2dforce_hull = nh.serviceClient<skye_ros::ApplyForce2DCogBf>("/skye_gz/au_1/apply_force_2D");
+
+  skye_ros::ApplyForce2DCogBf  srv;
+  srv.request.start_time = ros::Time::now();
+
+
+
+  ros::Time begin = ros::Time::now();
+  ros::Duration d(2.0);
+  ros::Rate r(50); // 50 hz
+
+  ROS_INFO("[skye_listener] sending debug command");
+
+//  while(ros::Time::now() <= (begin + d)){
+
+//    apply_2dforce_hull.call(srv);
+
+//    r.sleep();
+//  }
+
+  //Test thrust
+//  srv.request.Fx = 15.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+//  srv.request.Fx = 0.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+//  srv.request.Fx = 5.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+//  srv.request.Fx = 0.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+//  srv.request.Fx = 1.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+//  srv.request.Fx = 0.0;
+//  srv.request.Fy = 0.0;
+//  srv.request.duration = ros::Duration(2.0);
+//  apply_2dforce_hull.call(srv);
+//  ros::Duration(2.0).sleep();
+
+  //Test orientation
+  double theta;
+
+  theta = 0.1;
+  srv.request.Fx = cos(theta);
+  srv.request.Fy = sin(theta);
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  theta = 0.0;
+  srv.request.Fx = cos(theta);
+  srv.request.Fy = sin(theta);
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  theta = 1.0;
+  srv.request.Fx = cos(theta);
+  srv.request.Fy = sin(theta);
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  theta = 0.0;
+  srv.request.Fx = cos(theta);
+  srv.request.Fy = sin(theta);
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  theta = M_PI;
+  srv.request.Fx = cos(theta);
+  srv.request.Fy = sin(theta);
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  srv.request.Fx = 0.0;
+  srv.request.Fy = 0.0;
+  srv.request.duration = ros::Duration(2.0);
+  apply_2dforce_hull.call(srv);
+  ros::Duration(2.0).sleep();
+
+  ROS_INFO("[skye_listener] sent debug command");
+
+  return true;
+}*/
 
 };
 };	// namespace mavplugin

@@ -100,7 +100,7 @@ protected:
   std::string apply_force_service_name_;
   std::string apply_torque_service_name_;
   int au_number_;
-  int use_allocator_output_;
+  bool use_allocator_output_;
   // service client
   ros::ServiceClient apply_wrench_hull_cog_; // server to apply a wrench expressed in Skye's body frame 
   ros::ServiceClient apply_force_hull_cog_; // server to apply a force expressed in Skye's body frame

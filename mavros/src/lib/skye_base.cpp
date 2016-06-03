@@ -134,7 +134,7 @@ void SkyeBase::getConfiguraionParams()
   complete_list_params &= nh_.getParam("skye/au_base_name_gazebo", au_base_name_);
   complete_list_params &= nh_.getParam("skye/au_number", au_number_);
   complete_list_params &= nh_.getParam("skye/hull_name_gz", hull_name_);
-  complete_list_params &= nh_.getParam("skye/use_allocator_output", use_allocator_output_);
+  nh_.param<bool>("use_allocator_output", use_allocator_output_, false);
 
   if(!complete_list_params)
     ROS_DEBUG("Parameter(s) missing in yaml file.");

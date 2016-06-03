@@ -192,13 +192,12 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
   skye_quat_to_eu(q_imu, roll, pitch, yaw);
 
   //TODO delete me
-  if(count >= MAX_COUNT){
-    ROS_INFO("yaw: %f, pitch: %f, roll: %f", yaw, pitch, roll);
-    count = 0;
-  }
-  else
-    count++;
-
+//  if(count >= MAX_COUNT){
+//    ROS_INFO("yaw: %f, pitch: %f, roll: %f", yaw, pitch, roll);
+//    count = 0;
+//  }
+//  else
+//    count++;
   //TODO end delete me
 
   rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);

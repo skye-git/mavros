@@ -10,6 +10,8 @@
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
 
+  <arg name="use_allocator_output" default="false"/> <!-- Skye -->
+
   <!-- Inflate Skye in Gazebo -->
   <include file="$(find skye_ros)/launch/inflate_skye.launch">
     <arg name="paused" value="$(arg paused)"/>
@@ -27,7 +29,8 @@
   <include file="$(find mavros)/launch/px4.launch">
     <arg name="fcu_url" value="$(arg fcu_url)" />
     <arg name="gcs_url" value="$(arg gcs_url)" />
-    <arg name="skye_configuration" value="$(find mavros)/launch/skye_configuration.yaml" />
+    <arg name="skye_configuration" value="$(find mavros)/launch/skye_configuration.yaml" /> <!-- Skye -->
+    <arg name="use_allocator_output" value="$(arg use_allocator_output)" /> <!-- Skye -->
   </include> 
 
 </launch>
