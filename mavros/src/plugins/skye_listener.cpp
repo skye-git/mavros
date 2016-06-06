@@ -44,8 +44,8 @@ void initialize(UAS &uas_){
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
 
-  /*debug_srv_ = nh.advertiseService("/skye_mr/debug_srv",
-                                   &SkyeListenerPlugin::debug_srv, this);*/
+//  debug_srv_ = nh.advertiseService("/skye_mr/debug_srv",
+//                                   &SkyeListenerPlugin::debug_srv, this);
 
   time_last_pos_ctrl_out = time_last_att_ctrl_out = time_last_allocator_out = ros::Time::now();
 }
@@ -70,7 +70,7 @@ private:
   ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
   ros::Publisher force_pub; /*< position controller output force. */
   ros::Publisher debug_vec3_pub; /*< debug vector publisher. */
-  //ros::ServiceServer debug_srv_; /*< debugging service. */
+//  ros::ServiceServer debug_srv_; /*< debugging service. */
   skye_base::SkyeBase skye_base;
 
   //"last time" variables
@@ -224,27 +224,6 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     allocator_out_msg->thrust[i] = allocator_output.thrust[i];
     allocator_out_msg->angle[i] = allocator_output.angle[i];
 
-    //TODO delete me
-//    static int count = 0;
-//    static int max_count = 75;
-
-//    if(count >= max_count){
-
-//      ROS_INFO("\n------------------------------------");
-//      for(int j = 0; j < skye_base.getAuNumber(); j++){
-//        double Fx = allocator_output.thrust[j] * cos(allocator_output.angle[j] * kDegToRad);
-//        double Fy = allocator_output.thrust[j] * sin(allocator_output.angle[j] * kDegToRad);
-
-//        ROS_INFO("[%d]  Fx %f \t\t Fy %f", j, Fx, Fy);
-//      }
-//      ROS_INFO("\n------------------------------------");
-
-//      count = 0;
-//    }
-//    else
-//      count++;
-    //TODO end delete me
-
     // call service if available
     if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
       if(skye_base.setAuForce2D(srv, i)){
@@ -347,7 +326,7 @@ void handle_debug_vec3(const mavlink_message_t *msg, uint8_t sysid, uint8_t comp
   //Test orientation
   double theta;
 
-  theta = 0.1;
+  theta = 0.5;
   srv.request.Fx = cos(theta);
   srv.request.Fy = sin(theta);
   srv.request.duration = ros::Duration(2.0);
