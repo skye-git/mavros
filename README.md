@@ -114,7 +114,7 @@ roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200
 ```
 In the above example Mavlink is using USB0. This launch files starts Gazebo in pause. You can press the "play" button whenever you are ready to start the simulation.
 
-####Changing Fimrware Parameter
+####Changing Firmware Parameter
 During HIL simulation it is not possible to change onboard paramters via QGroundControl. The above list of services show how to change onboard parameters.
 
   * /skye_mr/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF), 3 (6DOFI), 4 (SKYE_ATT_C_MOD_GEOM), 5 (SKYE_ATT_C_MOD_MAX);
@@ -129,5 +129,15 @@ rosservice call /skye_mr/set_pos_c_mod 1
 rosservice call /skye_mr/set_param 'INTEGER_PARAM_NAME' '[PARAM_VALUE, 0.0]'
 rosservice call /skye_mr/set_param 'FLOAT_PARAM_NAME' '[0, PARAM_VALUE]'
 ```
+####Testing Allocator Output
+By default option the outputs of the attitude and position controllers are directly applied to the center of gravity of the hull. If you want to test the allocator output and apply a 2D force in each AU, then you can type
+```bash
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 use_allocator_output:=true
+```
 
+####Selecting Skye's Model 
+You can use the URDF model (it's exactly the same of the SDF one, it allows only more option when used in Rviz) by typing
+```bash
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 use_urdf:=true
+```
 
