@@ -11,6 +11,7 @@
   <arg name="debug" default="false"/>
 
   <arg name="use_allocator_output" default="false"/> <!-- Skye -->
+  <arg name="use_urdf" default="false"/>
 
   <!-- Inflate Skye in Gazebo -->
   <include file="$(find skye_ros)/launch/inflate_skye.launch">
@@ -19,6 +20,7 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="headless" value="$(arg headless)"/>
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="use_urdf" value="$(arg use_urdf)"/>
   </include> 
 
   <!-- Include spacenav_nod for 3d mouse -->
