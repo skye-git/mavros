@@ -81,10 +81,6 @@ private:
 //-----------------------------------------------------------------------------
 void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
 
-  // Should we use attitude controller output instead of allocator output?
-  if(skye_base.useAllocatorOutput())
-    return;
-
   mavlink_attitude_ctrl_output_t attiude_ctrl_output;
   mavlink_msg_attitude_ctrl_output_decode(msg, &attiude_ctrl_output);
 
@@ -119,13 +115,16 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    */
   srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
 
-  // call service if available
-  if(skye_base.isBodyTorqueAvail()){
-    if(skye_base.setBodyTorque(srv)){
-      //ROS_INFO("wrench applied!");
-    }
-    else{
-      ROS_ERROR("[skye_listener] Failed to apply body torque");
+  // Should we use attitude controller output instead of allocator output?
+  if(!skye_base.useAllocatorOutput()){
+    // call service if available
+    if(skye_base.isBodyTorqueAvail()){
+      if(skye_base.setBodyTorque(srv)){
+        //ROS_INFO("wrench applied!");
+      }
+      else{
+        ROS_ERROR("[skye_listener] Failed to apply body torque");
+      }
     }
   }
 
@@ -135,10 +134,6 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 
 //-----------------------------------------------------------------------------
 void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
-
-  // Should we use position controller output instead of allocator output?
-  if(skye_base.useAllocatorOutput())
-    return;
 
   mavlink_position_ctrl_output_t position_ctrl_output;
   mavlink_msg_position_ctrl_output_decode(msg, &position_ctrl_output);
@@ -174,13 +169,16 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    */
   srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier;
 
-  // call service if available
-  if(skye_base.isBodyForceAvail()){
-    if(skye_base.setBodyForce(srv)){
-      //ROS_INFO("wrench applied!");
-    }
-    else{
-      ROS_ERROR("[skye_listener] Failed to apply body force");
+  // Should we use attitude controller output instead of allocator output?
+  if(!skye_base.useAllocatorOutput()){
+    // call service if available
+    if(skye_base.isBodyForceAvail()){
+      if(skye_base.setBodyForce(srv)){
+        //ROS_INFO("wrench applied!");
+      }
+      else{
+        ROS_ERROR("[skye_listener] Failed to apply body force");
+      }
     }
   }
 
@@ -190,10 +188,6 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 
 //-----------------------------------------------------------------------------
 void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
-
-  // Should we use allocator output ?
-  if(!skye_base.useAllocatorOutput())
-    return;
 
   // Apply a 2D force to each AU based on the output of the allocator
   mavlink_allocation_output_t allocator_output;
@@ -224,13 +218,16 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     allocator_out_msg->thrust[i] = allocator_output.thrust[i];
     allocator_out_msg->angle[i] = allocator_output.angle[i];
 
-    // call service if available
-    if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
-      if(skye_base.setAuForce2D(srv, i)){
-        //ROS_INFO("force applied!");
-      }
-      else{
-        ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+    // Should we use allocator output ?
+    if(skye_base.useAllocatorOutput()){
+      // call service if available
+      if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
+        if(skye_base.setAuForce2D(srv, i)){
+          //ROS_INFO("force applied!");
+        }
+        else{
+          ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
+        }
       }
     }
   }
