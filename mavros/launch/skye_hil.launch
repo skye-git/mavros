@@ -21,7 +21,7 @@
     <arg name="headless" value="$(arg headless)"/>
     <arg name="debug" value="$(arg debug)"/>
     <arg name="use_urdf" value="$(arg use_urdf)"/>
-  </include> 
+  </include>
 
   <!-- Include spacenav_nod for 3d mouse -->
   <include file="$(find spacenav_node)/launch/classic.launch">

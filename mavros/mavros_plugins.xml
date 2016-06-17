@@ -2,7 +2,7 @@
 	<!--<class name="dummy" type="mavplugin::DummyPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Dummy test plugin.</description>
 	</class>-->
-	<class name="sys_status" type="mavplugin::SystemStatusPlugin" base_class_type="mavplugin::MavRosPlugin">
+        <!--<class name="sys_status" type="mavplugin::SystemStatusPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish system status.</description>
 	</class>
 	<class name="imu_pub" type="mavplugin::IMUPubPlugin" base_class_type="mavplugin::MavRosPlugin">
@@ -22,11 +22,11 @@
 	</class>
 	<class name="local_position" type="mavplugin::LocalPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish FCU local position.</description>
-	</class>
+        </class>-->
 	<!-- <class name="global_position" type="mavplugin::GlobalPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish FCU fused global position and raw GPS fix.</description>
 	</class> -->
-	<class name="setpoint_position" type="mavplugin::SetpointPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
+        <!--<class name="setpoint_position" type="mavplugin::SetpointPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Send to FCU external position setpoint.</description>
 	</class>
 	<class name="safety_area" type="mavplugin::SafetyAreaPlugin" base_class_type="mavplugin::MavRosPlugin">
@@ -64,7 +64,7 @@
 	</class>
 	<class name="altitude" type="mavplugin::AltitudePlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish altitude values</description>
-	</class>
+        </class>-->
 
 	<!-- Skye harware in the loop -->
 	<class name="skye_talker" type="mavplugin::SkyeTalkerPlugin" base_class_type="mavplugin::MavRosPlugin">
