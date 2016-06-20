@@ -61,28 +61,12 @@ You will be using the ROS python tools wstool, rosinstall,and catkin_tools for t
 ```bash 
 sudo apt-get install python-wstool python-rosinstall-generator python-catkin-tools
 ```
-First get the most recent copy of Skye's dialect:
-```bash
-mkdir -p ~/skye-git
-cd ~/skye-git
-git clone https://github.com/skye-git/mavlink
-```
-Now you're ready to get a copy of the source file of mavlink-ros package.
+Now you're ready to get a copy of the source file of mavlink package.
 
-**Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/indigo-devel)
+**Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/indigo-devel)
 ```bash
 cd ~/catkin_ws
-wstool init ~/catkin_ws/src
-rosinstall_generator mavlink | tee -a /tmp/mavlink.rosinstall
-wstool merge -t src /tmp/mavlink.rosinstall
-wstool update -t src
-rosdep install --from-paths src --ignore-src -y
-```
-Copy Skye's dialect into mavlink message_definition folder and compile it:
-```bash
-cp ~/skye-git/mavlink/message_definitions/v1.0/skye.xml ~/catkin_ws/src/mavlink/message_definitions/v1.0/skye.xml
-cd ~/catkin_ws
-catkin build
+git clone git@github.com:skye-git/mavlink.git -b skye_pixracer_porting_ros #TODO update me with master once merged
 ```
 It is conviniente to source the setup.* file
 ```bash
@@ -92,14 +76,14 @@ Now you can download the mavros package and sapcenav drivers and compile them.
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
-git clone https://github.com/skye-git/mavros -b skye_hil
+git clone https://github.com/skye-git/mavros -b indigo-devel
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
  #compile using skye dialect from mavlink package
 catkin build --cmake-args -DMAVLINK_DIALECT=skye
 ```
 
-**Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must hard copy the latest version of the skye.xml file, as explained above, and compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect everytime you compile the mavlink repo used by mavros.
+**Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must pull the latest files into the mavlink folder and tehn compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect everytime you compile the mavlink repo used by mavros.
 
 #### Troubleshooting
 In case of `CMake Error: Could not find a package configuration file provided by "control_toolbox"`, please install the following packages:
