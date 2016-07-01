@@ -21,7 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   mavros_msgs
   skye_ros #Skye - ROS interface
-  spacenav_node # 3Dconnexion ros package to read 3D mouse inputs
+  mavlink #Skye - custom mavlink package
+  spacenav_node # Skye - 3Dconnexion ros package to read 3D mouse inputs
 )
 
 ## System dependencies are found with CMake's conventions
