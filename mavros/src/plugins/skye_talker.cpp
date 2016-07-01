@@ -452,10 +452,10 @@ bool send_step_x(std_srvs::Empty::Request &req,
   //make sure we are in controlled mode within position controller
   //set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
 
-  //send 1 in X direction for 5 seconds
+  //send 1 in X direction for ... seconds
   ros::Time begin = ros::Time::now();
   ros::Duration d(5.0);
-  ros::Rate r(50); // 50 hz
+  ros::Rate r(30); // frequency [Hz]
   mavlink_message_t msg;
   geometry_msgs::TwistPtr pt(new geometry_msgs::Twist());
 
