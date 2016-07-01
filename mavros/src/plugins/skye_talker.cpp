@@ -90,6 +90,12 @@ void set_hil_mode(bool hil_on){
 }
 
 //-----------------------------------------------------------------------------
+void set_allocation_case(int allocation_case){
+  set_parameter("SKYE_AL_CASE", allocation_case);
+  ROS_INFO_STREAM("[skye_talker]: set SKYE_AL_CASE to " << allocation_case);
+}
+
+//-----------------------------------------------------------------------------
 void initialize(UAS &uas_){
   uas = &uas_;
 
@@ -124,6 +130,8 @@ void initialize(UAS &uas_){
 ~SkyeTalkerPlugin(){
   // disable HIL mode before exiting
   set_hil_mode(false);
+  // set allocation case to -1 before exiting
+  set_allocation_case(-1);
 }
 
 //-----------------------------------------------------------------------------
@@ -259,8 +267,11 @@ void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
 void handle_heartbeat(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
   // the first time we receive the hearbit msg we enable HIL mode
   if(!received_first_heartbit){
-      // enable HIL mode before exiting
+      // enable HIL mode
       set_hil_mode(true);
+      // set allocation case to 0 to be able to use allocation app output
+      set_allocation_case(0);
+
       received_first_heartbit = true;
     }
 }
