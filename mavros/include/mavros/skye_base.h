@@ -10,6 +10,8 @@
 
 #include <ros/ros.h>
 #include <string.h>
+#include <Eigen/Core>
+#include<Eigen/StdVector>
 
 #include "skye_ros/ApplyWrenchCogBf.h"
 #include "skye_ros/ApplyForceBf.h"
@@ -84,11 +86,27 @@ public:
    */
   bool useAllocatorOutput();
 
+  /**
+   * @brief Compute the produced wrench of a force vector in AU frame in the center of AUs
+   */
+  void computeWrenchCenterAUs(int au_index, Eigen::Ref<const Eigen::Matrix<double,3,1> > f_au,
+                              Eigen::Ref<Eigen::Matrix<double,6,1> > w_ned);
+
 protected:
   /**
    * @brief Load configuration parameters from yaml file.
    */
   void getConfiguraionParams();
+
+  /**
+   * @brief Load AUs configuration - 8 AUs for enterprise
+   */
+  void load8AusConfiguration();
+
+  /**
+   * @brief Load AUs configuration - unkown number of AUs
+   */
+  void loadUnkownAusConfiguration();
 
   ros::NodeHandle nh_;
   // parameters
@@ -107,6 +125,10 @@ protected:
   ros::ServiceClient apply_torque_hull_cog_; // server to apply a torque expressed in Skye's body frame
   std::vector<ros::ServiceClient> apply_au_force_2d_; // server vector to apply 2D forces to AUs
   //std::vector<ros::ServiceClient> apply_au_force_2d_; // server vector to apply 2D forces to AUs
+
+  // AUs configuration
+  std::vector<Eigen::Matrix<double,3,3>,Eigen::aligned_allocator<Eigen::Matrix<double,3,3>> > vector_R_S_P;
+  std::vector<Eigen::Matrix<double,3,1>,Eigen::aligned_allocator<Eigen::Matrix<double,3,1>> > vector_P_S_P;
 };
 
 

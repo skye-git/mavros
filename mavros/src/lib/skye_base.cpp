@@ -5,6 +5,7 @@
  */
 
 #include <ros/console.h>
+#include <Eigen/Geometry>
 
 #include "mavros/skye_base.h"
 
@@ -126,6 +127,23 @@ bool SkyeBase::useAllocatorOutput(){
 }
 
 //-----------------------------------------------------------------------------
+void SkyeBase::computeWrenchCenterAUs(int au_index, Eigen::Ref<const Eigen::Matrix<double,3,1> > f_au,
+                                      Eigen::Ref<Eigen::Matrix<double,6,1> > w_ned){
+
+
+  Eigen::Matrix<double,3,1> f_ned; // force in NED frame
+  Eigen::Matrix<double,3,1> t_ned; // torque in NED frame
+
+  // use rotation matrix from AU frame to NED frame to compute force in NED
+  f_ned = vector_R_S_P.at(au_index) * f_au;
+  // torque in ned = offset_au_i from center AUs cross product force in NED
+  t_ned = vector_P_S_P.at(au_index).cross(f_ned);
+
+  w_ned.topRows(3) = f_ned;
+  w_ned.bottomRows(3) = t_ned;
+}
+
+//-----------------------------------------------------------------------------
 void SkyeBase::getConfiguraionParams()
 {
   bool complete_list_params = true;
@@ -136,11 +154,24 @@ void SkyeBase::getConfiguraionParams()
   complete_list_params &= nh_.getParam("skye/hull_name_gz", hull_name_);
   nh_.param<bool>("use_allocator_output", use_allocator_output_, false);
 
+  //load AUs configuration based on the number of AUs
+  switch(au_number_){
+
+    case 8:
+      load8AusConfiguration();
+      break;
+    default:
+      loadUnkownAusConfiguration();
+      ROS_ERROR_STREAM(__FILE__ << ": (" << __func__ <<
+                       ") configuration for " << au_number_ <<" AUs not found \n" <<
+                       "Please add a valid configuration in " << __FILE__ << " and compile Mavros again.");
+  }
+
   if(!complete_list_params)
     ROS_DEBUG("Parameter(s) missing in yaml file.");
 
   if(use_allocator_output_)
-    ROS_INFO("********** [skye_base] Use allocator output to drive Skye");
+    ROS_INFO("********** [skye_base] Use allocator output to drive Skye with %d AUs", getAuNumber());
   else
     ROS_INFO("********** [skye_base] Use directly Attitude and Position controller outputs to drive Skye");
   
@@ -151,5 +182,89 @@ int SkyeBase::getAuNumber(){
     return au_number_;
 }
 
+//-----------------------------------------------------------------------------
+void SkyeBase::load8AusConfiguration(){
+
+  //TODO delete me, dubug printing
+  ROS_INFO("+++++ [skye_base] load8AusConfiguration");
+
+  Eigen::Matrix<double,3,3> R_s_p;
+  Eigen::Matrix<double,3,1> P_s_p;
+
+  // ----- AU 1: Yaw: 0.00 Pitch: 90.00 Roll: -180.00 [deg]
+  R_s_p << 	0.000000,-0.000000,-1.000000,
+                          0.000000,-1.000000,0.000000,
+                          -1.000000,-0.000000,0.000000;
+  P_s_p << 	1.008167,-0.000000,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 2: Yaw: 0.00 Pitch: 90.00 Roll: -135.00 [deg]
+  R_s_p << 	0.000000,-0.707107,-0.707107,
+                          0.000000,-0.707107,0.707107,
+                          -1.000000,-0.000000,0.000000;
+  P_s_p << 	0.712881,-0.712881,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 3: Yaw: 0.00 Pitch: 90.00 Roll: -90.00 [deg]
+  R_s_p << 	0.000000,-1.000000,-0.000000,
+                          0.000000,-0.000000,1.000000,
+                          -1.000000,-0.000000,0.000000;
+  P_s_p << 	0.000000,-1.008167,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 4: Yaw: 0.00 Pitch: 90.00 Roll: -45.00 [deg]
+  R_s_p << 	0.000000,-0.707107,0.707107,
+                          0.000000,0.707107,0.707107,
+                          -1.000000,0.000000,0.000000;
+  P_s_p << 	-0.712881,-0.712881,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 5: Yaw: 0.00 Pitch: 90.00 Roll: -0.00 [deg]
+  R_s_p << 	0.000000,-0.000000,1.000000,
+                          0.000000,1.000000,0.000000,
+                          -1.000000,0.000000,0.000000;
+  P_s_p << 	-1.008167,-0.000000,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 6: Yaw: 0.00 Pitch: 90.00 Roll: 45.00 [deg]
+  R_s_p << 	0.000000,0.707107,0.707107,
+                          0.000000,0.707107,-0.707107,
+                          -1.000000,0.000000,0.000000;
+  P_s_p << 	-0.712881,0.712881,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 7: Yaw: 0.00 Pitch: 90.00 Roll: 90.00 [deg]
+  R_s_p << 	0.000000,1.000000,0.000000,
+                          0.000000,0.000000,-1.000000,
+                          -1.000000,0.000000,0.000000;
+  P_s_p << 	-0.000000,1.008167,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
+
+  // ----- AU 8: Yaw: 0.00 Pitch: 90.00 Roll: 135.00 [deg]
+  R_s_p << 	0.000000,0.707107,-0.707107,
+                          0.000000,-0.707107,-0.707107,
+                          -1.000000,0.000000,0.000000;
+  P_s_p << 	0.712881,0.712881,-0.000000;
+  vector_R_S_P.push_back(R_s_p);
+  vector_P_S_P.push_back(P_s_p);
 
 }
+
+//-----------------------------------------------------------------------------
+void SkyeBase::loadUnkownAusConfiguration(){
+
+  // unkown configuration, set identity rotation and no position vector
+  for(int i = 0; i < getAuNumber(); i++){
+      vector_R_S_P.push_back(Eigen::Matrix<double,3,3>::Identity());
+      vector_P_S_P.push_back(Eigen::Matrix<double,3,1>::Zero());
+  }
+}
+
+} // namespace skye_base

@@ -158,6 +158,10 @@ private:
   bool received_first_heartbit;
   bool sending_step_command;
 
+  // Timers to send fixed duration step command
+  ros::Timer timerSendStepCommand;
+  ros::Timer timerStopStepCommand;
+
 //-----------------------------------------------------------------------------
 /* Custom function to obtain euler angles (rotation order ZYX) in local axis.
  * This function returns roll in (-pi,pi), pitch in (-pi/2,pi/2) and yaw in (-pi,pi).
@@ -261,6 +265,9 @@ void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
   UAS_FCU(uas)->send_message(&msg);
 
   user_setpoint_pub.publish(*ptwist);
+
+  //TODO delete me
+  //ROS_INFO_STREAM("linear_x: " << linear_x);
 }
 
 //-----------------------------------------------------------------------------
@@ -446,19 +453,8 @@ bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
 }
 
 //-----------------------------------------------------------------------------
-bool send_step_x(std_srvs::Empty::Request &req,
-                 std_srvs::Empty::Response &res){
-
-  //make sure we are in controlled mode within position controller
-  //set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
-
-  //send 1 in X direction for ... seconds
-  ros::Time begin = ros::Time::now();
-  ros::Duration d(5.0);
-  ros::Rate r(30); // frequency [Hz]
-  mavlink_message_t msg;
+void callback_send_step_command(const ros::TimerEvent&){
   geometry_msgs::TwistPtr pt(new geometry_msgs::Twist());
-
 
   pt->linear.x = 1.0;
   pt->linear.y = 0.0;
@@ -468,18 +464,39 @@ bool send_step_x(std_srvs::Empty::Request &req,
   pt->angular.y = 0.0;
   pt->angular.z = 0.0;
 
-  sending_step_command = true;
-  ROS_INFO("[skye_talker] sending step command in linear_x");
+  send_user_setpoint(pt);
+}
 
-  while(ros::Time::now() <= (begin + d)){
+//-----------------------------------------------------------------------------
+void callback_stop_step_command(const ros::TimerEvent&){
 
-    send_user_setpoint(pt);
-
-    r.sleep();
-  }
-
+  timerSendStepCommand.stop();
   sending_step_command = false;
   ROS_INFO("[skye_talker] sent step command in linear_x");
+}
+
+//-----------------------------------------------------------------------------
+bool send_step_x(std_srvs::Empty::Request &req,
+                 std_srvs::Empty::Response &res){
+
+  //make sure we are in controlled mode within position controller
+  //set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
+
+  //prevent 3D mouse to send input while we are sending the step command
+  sending_step_command = true;
+
+  //activate timers: one to send preidically step command and
+  // another one to stop the first after a fixed time
+  timerSendStepCommand = nh.createTimer(ros::Duration(1.0/30.0),
+                                        &SkyeTalkerPlugin::callback_send_step_command,
+                                        this); // 30 [Hz]
+
+  timerStopStepCommand = nh.createTimer(ros::Duration(5.0),
+                                        &SkyeTalkerPlugin::callback_stop_step_command,
+                                        this,
+                                        true);  // after 5 s, oneshot = true
+
+  ROS_INFO("[skye_talker] sending step command in linear_x");
 
   return true;
 }

@@ -8,10 +8,13 @@
  */
 #include <cmath>
 
+
 #include <mavros/mavros_plugin.h>
 #include <pluginlib/class_list_macros.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/Wrench.h>
+#include <std_msgs/Duration.h>
 #include <std_srvs/Empty.h>
 
 #include "mavros/skye_base.h"
@@ -40,6 +43,7 @@ void initialize(UAS &uas_){
   uas = &uas_;
   torque_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
   allocator_output_pub = nh.advertise<skye_ros::AllocatorOutput>("/skye_px4/allocator_output", 10);
+  wrench_center_aus_pub = nh.advertise<geometry_msgs::Wrench>("/skye_px4/wrench_center_aus", 10);
   force_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/position_ctrl_output", 10);
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
@@ -68,6 +72,7 @@ private:
 
   ros::Publisher torque_pub; /*< attitide controller output torque in to be applied in the CoG. */
   ros::Publisher allocator_output_pub; /*< allocator output thrust and angle for every AU. */
+  ros::Publisher wrench_center_aus_pub; /*< wrench produced on the center of the AUs. */
   ros::Publisher force_pub; /*< position controller output force. */
   ros::Publisher debug_vec3_pub; /*< debug vector publisher. */
 //  ros::ServiceServer debug_srv_; /*< debugging service. */
@@ -187,18 +192,52 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
 }
 
 //-----------------------------------------------------------------------------
+void compute_resulting_wrench_center_aus(const skye_ros::AllocatorOutput &allocator_out_msg,
+                                         geometry_msgs::Wrench &wrench_center_aus_msg){
+
+  Eigen::Matrix<double,3,1> Fi_au; // force produced by AU i, expresses in AU's frame
+  Eigen::Matrix<double,6,1> Wi_ned; // wrench produced by AU i in the geometric center of AUs
+  Eigen::Matrix<double,6,1> W_ned; // total wrench produced in the geometric center of AUs
+
+  W_ned = Eigen::Matrix<double,6,1>::Zero();
+
+  // compute the totale force and moment produced in the geometric center of the AUs
+  // by the application of each 2D force on the singke AU
+  for(int i = 0; i < skye_base.getAuNumber(); i++){
+    //compute ned_F_i
+    Fi_au << allocator_out_msg.thrust[i] * cos(allocator_out_msg.angle[i] * kDegToRad),
+             allocator_out_msg.thrust[i] * sin(allocator_out_msg.angle[i] * kDegToRad),
+             0.0;
+
+    skye_base.computeWrenchCenterAUs(i, Fi_au, Wi_ned);
+
+    W_ned += Wi_ned;
+  }
+
+  wrench_center_aus_msg.force.x = W_ned(0,0);
+  wrench_center_aus_msg.force.y = W_ned(1,0);
+  wrench_center_aus_msg.force.z = W_ned(2,0);
+
+  wrench_center_aus_msg.torque.x = W_ned(3,0);
+  wrench_center_aus_msg.torque.y = W_ned(4,0);
+  wrench_center_aus_msg.torque.z = W_ned(5,0);
+}
+
+//-----------------------------------------------------------------------------
 void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
 
   // Apply a 2D force to each AU based on the output of the allocator
   mavlink_allocation_output_t allocator_output;
   mavlink_msg_allocation_output_decode(msg, &allocator_output);
 
-  auto allocator_out_msg = boost::make_shared<skye_ros::AllocatorOutput>();
+  //auto allocator_out_msg = boost::make_shared<skye_ros::AllocatorOutput>();
+  skye_ros::AllocatorOutput allocator_out_msg;
+  geometry_msgs::Wrench wrench_center_aus_msg;
 
   // fill
-  allocator_out_msg->header.seq = seq_id++;
-  allocator_out_msg->header.stamp = ros::Time::now();
-  allocator_out_msg->header.frame_id = "0";
+  allocator_out_msg.header.seq = seq_id++;
+  allocator_out_msg.header.stamp = ros::Time::now();
+  allocator_out_msg.header.frame_id = "0";
 
   skye_ros::ApplyForce2DCogBf  srv;
   srv.request.start_time = ros::Time::now();
@@ -215,8 +254,8 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * kDegToRad);
     srv.request.Fy = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
 
-    allocator_out_msg->thrust[i] = allocator_output.thrust[i];
-    allocator_out_msg->angle[i] = allocator_output.angle[i];
+    allocator_out_msg.thrust[i] = allocator_output.thrust[i];
+    allocator_out_msg.angle[i] = allocator_output.angle[i];
 
     // Should we use allocator output ?
     if(skye_base.useAllocatorOutput()){
@@ -232,11 +271,31 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
     }
   }
 
-  // publish
-  allocator_output_pub.publish(allocator_out_msg);
-
   time_last_allocator_out = srv.request.start_time;
 
+  //debugging: check allocation duration
+//  static ros::Publisher alloc_duration_pub = nh.advertise<std_msgs::Duration>("/skye_px4/allocator_duration", 10);
+//  static std_msgs::Duration alloc_duration_msg;
+//  alloc_duration_msg.data = srv.request.duration;
+//  alloc_duration_pub.publish(alloc_duration_msg);
+  //End debugging: check allocation duration
+
+  // check what's the resulting wrench applied in the geometric center of the AUs
+  compute_resulting_wrench_center_aus(allocator_out_msg, wrench_center_aus_msg);
+
+  //debugging: check force module in center of AUs
+  ROS_INFO("|force_center_aus| = %f", sqrt(wrench_center_aus_msg.force.x * wrench_center_aus_msg.force.x +
+                                           wrench_center_aus_msg.force.y * wrench_center_aus_msg.force.y +
+                                           wrench_center_aus_msg.force.z * wrench_center_aus_msg.force.z));
+
+  ROS_INFO("|torque_center_aus| = %f", sqrt(wrench_center_aus_msg.torque.x * wrench_center_aus_msg.torque.x +
+                                            wrench_center_aus_msg.torque.y * wrench_center_aus_msg.torque.y +
+                                            wrench_center_aus_msg.torque.z * wrench_center_aus_msg.torque.z));
+  //end debugging
+
+  // publish
+  allocator_output_pub.publish(allocator_out_msg);
+  wrench_center_aus_pub.publish(wrench_center_aus_msg);
 }
 
 //-----------------------------------------------------------------------------
