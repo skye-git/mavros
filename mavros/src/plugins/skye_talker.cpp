@@ -25,6 +25,9 @@
 
 #include "mavros/skye_base.h"
 
+//settings
+const double kUser3DMouseSendingTime = 1.0 / 25.0; // 1 / frequency
+
 //debugging
 static int count = 0;
 #define MAX_COUNT 50
@@ -124,6 +127,8 @@ void initialize(UAS &uas_){
   user_setpoint_pub = nh.advertise<geometry_msgs::Twist>("/skye_mr/user_setpoint", 10);
 
   sending_step_command = false;
+
+  user_3d_mouse_last_time = ros::Time::now();
 }
 
 //-----------------------------------------------------------------------------
@@ -157,6 +162,9 @@ private:
   ros::Publisher user_setpoint_pub; /*< user setpoint sent to px4. */
   bool received_first_heartbit;
   bool sending_step_command;
+
+  //last time variables
+  ros::Time user_3d_mouse_last_time;
 
   // Timers to send fixed duration step command
   ros::Timer timerSendStepCommand;
@@ -238,6 +246,13 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
 
 //-----------------------------------------------------------------------------
 void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
+
+  // should we send the message now or wait a little bit more?
+  if((ros::Time::now() - user_3d_mouse_last_time).toSec() < kUser3DMouseSendingTime){
+    return;
+  }
+
+
   mavlink_message_t msg;
   float linear_x, linear_y, linear_z; // linear velocities
   float angular_x, angular_y, angular_z; // angular velocities
@@ -265,6 +280,8 @@ void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
   UAS_FCU(uas)->send_message(&msg);
 
   user_setpoint_pub.publish(*ptwist);
+
+  user_3d_mouse_last_time = ros::Time::now();
 
   //TODO delete me
   //ROS_INFO_STREAM("linear_x: " << linear_x);
