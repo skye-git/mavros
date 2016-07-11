@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="fcu_url" default="/dev/ttyUSB0:115200"/>
+  <arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
   <arg name="gcs_url" default="udp://14555@localhost:14550"/>
 
   <arg name="paused" default="true"/>
