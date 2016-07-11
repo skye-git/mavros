@@ -284,13 +284,13 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   compute_resulting_wrench_center_aus(allocator_out_msg, wrench_center_aus_msg);
 
   //debugging: check force module in center of AUs
-  ROS_INFO("|force_center_aus| = %f", sqrt(wrench_center_aus_msg.force.x * wrench_center_aus_msg.force.x +
-                                           wrench_center_aus_msg.force.y * wrench_center_aus_msg.force.y +
-                                           wrench_center_aus_msg.force.z * wrench_center_aus_msg.force.z));
+//  ROS_INFO("|force_center_aus| = %f", sqrt(wrench_center_aus_msg.force.x * wrench_center_aus_msg.force.x +
+//                                           wrench_center_aus_msg.force.y * wrench_center_aus_msg.force.y +
+//                                           wrench_center_aus_msg.force.z * wrench_center_aus_msg.force.z));
 
-  ROS_INFO("|torque_center_aus| = %f", sqrt(wrench_center_aus_msg.torque.x * wrench_center_aus_msg.torque.x +
-                                            wrench_center_aus_msg.torque.y * wrench_center_aus_msg.torque.y +
-                                            wrench_center_aus_msg.torque.z * wrench_center_aus_msg.torque.z));
+//  ROS_INFO("|torque_center_aus| = %f", sqrt(wrench_center_aus_msg.torque.x * wrench_center_aus_msg.torque.x +
+//                                            wrench_center_aus_msg.torque.y * wrench_center_aus_msg.torque.y +
+//                                            wrench_center_aus_msg.torque.z * wrench_center_aus_msg.torque.z));
   //end debugging
 
   // publish
