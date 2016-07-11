@@ -193,73 +193,73 @@ void SkyeBase::load8AusConfiguration(){
 
   // ----- AU 1: Yaw: 0.00 Pitch: 90.00 Roll: -180.00 [deg]
   R_s_p << 	0.000000,-0.000000,-1.000000,
-                0.000000,-1.000000,0.000000,
-                -1.000000,-0.000000,0.000000;
+      0.000000,-1.000000,0.000000,
+      -1.000000,-0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	1.138167,-0.000000,-0.000000;
+  P_s_p << 	2.605000,-0.000000,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 2: Yaw: 0.00 Pitch: 90.00 Roll: -135.00 [deg]
   R_s_p << 	0.000000,-0.707107,-0.707107,
-                0.000000,-0.707107,0.707107,
-                -1.000000,-0.000000,0.000000;
+      0.000000,-0.707107,0.707107,
+      -1.000000,-0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	0.804806,-0.804806,-0.000000;
+  P_s_p << 	1.842013,-1.842013,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 3: Yaw: 0.00 Pitch: 90.00 Roll: -90.00 [deg]
   R_s_p << 	0.000000,-1.000000,-0.000000,
-                0.000000,-0.000000,1.000000,
-                -1.000000,-0.000000,0.000000;
+      0.000000,-0.000000,1.000000,
+      -1.000000,-0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	0.000000,-1.138167,-0.000000;
+  P_s_p << 	0.000000,-2.605000,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 4: Yaw: 0.00 Pitch: 90.00 Roll: -45.00 [deg]
   R_s_p << 	0.000000,-0.707107,0.707107,
-                0.000000,0.707107,0.707107,
-                -1.000000,0.000000,0.000000;
+      0.000000,0.707107,0.707107,
+      -1.000000,0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	-0.804806,-0.804806,-0.000000;
+  P_s_p << 	-1.842013,-1.842013,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 5: Yaw: 0.00 Pitch: 90.00 Roll: -0.00 [deg]
   R_s_p << 	0.000000,-0.000000,1.000000,
-                0.000000,1.000000,0.000000,
-                -1.000000,0.000000,0.000000;
+      0.000000,1.000000,0.000000,
+      -1.000000,0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	-1.138167,-0.000000,-0.000000;
+  P_s_p << 	-2.605000,-0.000000,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 6: Yaw: 0.00 Pitch: 90.00 Roll: 45.00 [deg]
   R_s_p << 	0.000000,0.707107,0.707107,
-                0.000000,0.707107,-0.707107,
-                -1.000000,0.000000,0.000000;
+      0.000000,0.707107,-0.707107,
+      -1.000000,0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	-0.804806,0.804806,-0.000000;
+  P_s_p << 	-1.842013,1.842013,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 7: Yaw: 0.00 Pitch: 90.00 Roll: 90.00 [deg]
   R_s_p << 	0.000000,1.000000,0.000000,
-                0.000000,0.000000,-1.000000,
-                -1.000000,0.000000,0.000000;
+      0.000000,0.000000,-1.000000,
+      -1.000000,0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	-0.000000,1.138167,-0.000000;
+  P_s_p << 	-0.000000,2.605000,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
   // ----- AU 8: Yaw: 0.00 Pitch: 90.00 Roll: 135.00 [deg]
   R_s_p << 	0.000000,0.707107,-0.707107,
-                0.000000,-0.707107,-0.707107,
-                -1.000000,0.000000,0.000000;
+      0.000000,-0.707107,-0.707107,
+      -1.000000,0.000000,0.000000;
   //includes propeller height considered when generating lagrangina matrix
-  P_s_p << 	0.804806,0.804806,-0.000000;
+  P_s_p << 	1.842013,1.842013,-0.000000;
   vector_R_S_P.push_back(R_s_p);
   vector_P_S_P.push_back(P_s_p);
 
