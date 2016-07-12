@@ -24,9 +24,11 @@
 #include <std_srvs/Empty.h>
 
 #include "mavros/skye_base.h"
+#include "mavros_msgs/SkyeSendStep.h"
 
 //settings
 const double kUser3DMouseSendingTime = 1.0 / 25.0; // 1 / frequency
+const double kPI = 3.14159;
 
 //debugging
 static int count = 0;
@@ -114,8 +116,8 @@ void initialize(UAS &uas_){
   set_skye_pos_ctrl_srv = nh.advertiseService("/skye_mr/set_param/pos_ctrl",
                                               &SkyeTalkerPlugin::set_skye_pos_ctrl_params, this);
 
-  send_step_x_srv = nh.advertiseService("/skye_mr/send_step_x",
-                                        &SkyeTalkerPlugin::send_step_x, this);
+  send_step_srv = nh.advertiseService("/skye_mr/send_step",
+                                      &SkyeTalkerPlugin::send_step, this);
 
   skye_ros_ground_truth_sub = nh.subscribe("/skye_ros/ground_truth/hull",
                                            10,
@@ -158,7 +160,7 @@ private:
   ros::ServiceServer set_c_mod_att_srv; // service to set C_MOD_ATT parameter in px4
   ros::ServiceServer set_skye_param_srv; // service to set a parameter in px4
   ros::ServiceServer set_skye_pos_ctrl_srv; // service to set a position controller parameters in px4
-  ros::ServiceServer send_step_x_srv; // service to send a step velocity command on the x axis for 2 seconds
+  ros::ServiceServer send_step_srv; // service to send a step velocity command on the x axis for 2 seconds
   ros::Publisher user_setpoint_pub; /*< user setpoint sent to px4. */
   bool received_first_heartbit;
   bool sending_step_command;
@@ -167,8 +169,10 @@ private:
   ros::Time user_3d_mouse_last_time;
 
   // Timers to send fixed duration step command
-  ros::Timer timerSendStepCommand;
-  ros::Timer timerStopStepCommand;
+  ros::WallTimer timerSendStepCommand;
+  ros::WallTimer timerStopStepCommand;
+
+  mavros_msgs::SkyeSendStep::Request user_srv_req;
 
 //-----------------------------------------------------------------------------
 /* Custom function to obtain euler angles (rotation order ZYX) in local axis.
@@ -470,31 +474,32 @@ bool set_skye_pos_ctrl_params(mavros_msgs::SetSkyePosCtrlParms::Request &req,
 }
 
 //-----------------------------------------------------------------------------
-void callback_send_step_command(const ros::TimerEvent&){
+void callback_send_step_command(const ros::WallTimerEvent&){
   geometry_msgs::TwistPtr pt(new geometry_msgs::Twist());
 
-  pt->linear.x = 1.0;
-  pt->linear.y = 0.0;
-  pt->linear.z = 0.0;
+  //Y and Z signes are changed in send_user_setpoint to be adapted to NED convention
+  pt->linear.x = user_srv_req.linear_x;
+  pt->linear.y = -user_srv_req.linear_y;
+  pt->linear.z = -user_srv_req.linear_z;
 
-  pt->angular.x = 0.0;
-  pt->angular.y = 0.0;
-  pt->angular.z = 0.0;
+  pt->angular.x = user_srv_req.angular_x;
+  pt->angular.y = -user_srv_req.angular_y;
+  pt->angular.z = -user_srv_req.angular_z;
 
   send_user_setpoint(pt);
 }
 
 //-----------------------------------------------------------------------------
-void callback_stop_step_command(const ros::TimerEvent&){
+void callback_stop_step_command(const ros::WallTimerEvent&){
 
   timerSendStepCommand.stop();
   sending_step_command = false;
-  ROS_INFO("[skye_talker] sent step command in linear_x");
+  ROS_INFO("[skye_talker] sent step command");
 }
 
 //-----------------------------------------------------------------------------
-bool send_step_x(std_srvs::Empty::Request &req,
-                 std_srvs::Empty::Response &res){
+bool send_step(mavros_msgs::SkyeSendStep::Request &req,
+               mavros_msgs::SkyeSendStep::Response &res){
 
   //make sure we are in controlled mode within position controller
   //set_parameter("POS_C_MOD", SKYE_POS_C_MOD_CASCADE_PID);
@@ -502,18 +507,22 @@ bool send_step_x(std_srvs::Empty::Request &req,
   //prevent 3D mouse to send input while we are sending the step command
   sending_step_command = true;
 
+  user_srv_req = req;
+
   //activate timers: one to send preidically step command and
   // another one to stop the first after a fixed time
-  timerSendStepCommand = nh.createTimer(ros::Duration(1.0/30.0),
-                                        &SkyeTalkerPlugin::callback_send_step_command,
-                                        this); // 30 [Hz]
+  timerSendStepCommand = nh.createWallTimer(ros::WallDuration(1.0/25.0), // sending frequency
+                                            &SkyeTalkerPlugin::callback_send_step_command,
+                                            this); // 25 [Hz]
 
-  timerStopStepCommand = nh.createTimer(ros::Duration(5.0),
-                                        &SkyeTalkerPlugin::callback_stop_step_command,
-                                        this,
-                                        true);  // after 5 s, oneshot = true
+  timerStopStepCommand = nh.createWallTimer(ros::WallDuration(user_srv_req.duration.toSec()), // step duration
+                                            &SkyeTalkerPlugin::callback_stop_step_command,
+                                            this,
+                                            true);  // shoot only once
 
-  ROS_INFO("[skye_talker] sending step command in linear_x");
+  ROS_INFO("[skye_talker] sending step command");
+
+  res.success = true;
 
   return true;
 }

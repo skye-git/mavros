@@ -66,6 +66,7 @@ add_service_files(
   WaypointSetCurrent.srv
   SkyeCMode.srv
   SetSkyePosCtrlParms.srv
+  SkyeSendStep.srv
 )
 
 # add_action_files(
