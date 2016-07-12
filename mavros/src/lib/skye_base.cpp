@@ -150,22 +150,17 @@ void SkyeBase::getConfiguraionParams()
 
   complete_list_params &= nh_.getParam("skye/topic_imu_skye", topic_imu_skye_);
   complete_list_params &= nh_.getParam("skye/au_base_name_gazebo", au_base_name_);
-  complete_list_params &= nh_.getParam("skye/au_number", au_number_);
+  //complete_list_params &= nh_.getParam("skye/au_number", au_number_);
   complete_list_params &= nh_.getParam("skye/hull_name_gz", hull_name_);
   nh_.param<bool>("use_allocator_output", use_allocator_output_, false);
+  nh_.param<std::string>("model_name", gazebo_model_name_, "tetra");
 
   //load AUs configuration based on the number of AUs
-  switch(au_number_){
+  if(gazebo_model_name_ == "enterprise" || gazebo_model_name_ == "enterprise_naked")
+    load8AusConfiguration();
+  else
+    loadUnkownAusConfiguration();
 
-    case 8:
-      load8AusConfiguration();
-      break;
-    default:
-      loadUnkownAusConfiguration();
-      ROS_ERROR_STREAM(__FILE__ << ": (" << __func__ <<
-                       ") configuration for " << au_number_ <<" AUs not found \n" <<
-                       "Please add a valid configuration in " << __FILE__ << " and compile Mavros again.");
-  }
 
   if(!complete_list_params)
     ROS_DEBUG("Parameter(s) missing in yaml file.");
@@ -187,6 +182,8 @@ void SkyeBase::load8AusConfiguration(){
 
   //TODO delete me, dubug printing
   ROS_INFO("+++++ [skye_base] load8AusConfiguration");
+
+  au_number_ = 8;
 
   Eigen::Matrix<double,3,3> R_s_p;
   Eigen::Matrix<double,3,1> P_s_p;
@@ -268,11 +265,13 @@ void SkyeBase::load8AusConfiguration(){
 //-----------------------------------------------------------------------------
 void SkyeBase::loadUnkownAusConfiguration(){
 
-  // unkown configuration, set identity rotation and no position vector
-  for(int i = 0; i < getAuNumber(); i++){
-      vector_R_S_P.push_back(Eigen::Matrix<double,3,3>::Identity());
-      vector_P_S_P.push_back(Eigen::Matrix<double,3,1>::Zero());
-  }
+  au_number_ = 0;
+
+  ROS_ERROR_STREAM(__FILE__ << ": (" << __func__ <<
+                   ") configuration for " << gazebo_model_name_ <<" not found \n" <<
+                   "Please add a valid configuration in " << __FILE__ << " and compile Mavros again.");
+
+  ros::shutdown();
 }
 
 } // namespace skye_base

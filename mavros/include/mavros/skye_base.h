@@ -117,6 +117,7 @@ protected:
   std::vector<std::string> apply_au_force_service_name_;
   std::string apply_force_service_name_;
   std::string apply_torque_service_name_;
+  std::string gazebo_model_name_;
   int au_number_;
   bool use_allocator_output_;
   // service client
