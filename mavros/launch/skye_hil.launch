@@ -12,7 +12,9 @@
 
   <arg name="use_allocator_output" default="true"/> <!-- Skye -->
   <arg name="use_urdf" default="true"/> <!-- Skye -->
-  <arg name="model_name" default="enterprise_naked"/> <!-- tetra / enterprise / enterprise_naked -->
+
+  <!-- possible model names: tetra / enterprise_8aus / enterprise_6aus / enterprise_4aus / -->
+  <arg name="model_name" default="enterprise_8aus"/>
 
   <!-- Inflate Skye in Gazebo -->
   <include file="$(find skye_ros)/launch/inflate_skye.launch">

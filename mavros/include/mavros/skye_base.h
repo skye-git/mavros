@@ -101,7 +101,17 @@ protected:
   /**
    * @brief Load AUs configuration - 8 AUs for enterprise
    */
-  void load8AusConfiguration();
+  void loadEnterpriseConf8Aus();
+
+  /**
+   * @brief Load AUs configuration - 6 AUs for enterprise
+   */
+  void loadEnterpriseConf6Aus();
+
+  /**
+   * @brief Load AUs configuration - 4 AUs for enterprise
+   */
+  void loadEnterpriseConf4Aus();
 
   /**
    * @brief Load AUs configuration - unkown number of AUs
