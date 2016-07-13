@@ -236,15 +236,15 @@ void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p){
   uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
   /* Send the skye_attitude_hil message to Skye. */
-  mavlink_msg_skye_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                          timestamp,
-                                          roll,
-                                          pitch,
-                                          yaw,
-                                          rollspeed,
-                                          pitchspeed,
-                                          yawspeed,
-                                          q);
+  mavlink_msg_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                     timestamp,
+                                     roll,
+                                     pitch,
+                                     yaw,
+                                     rollspeed,
+                                     pitchspeed,
+                                     yawspeed,
+                                     q);
   UAS_FCU(uas)->send_message(&msg);
 }
 
@@ -322,14 +322,14 @@ void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
   uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
 
   /* Send the skye_attitude_hil message to Skye. */
-  mavlink_msg_skye_position_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                          timestamp,
-                                          x,
-                                          y,
-                                          z,
-                                          vx,
-                                          vy,
-                                          vz);
+  mavlink_msg_position_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                     timestamp,
+                                     x,
+                                     y,
+                                     z,
+                                     vx,
+                                     vy,
+                                     vz);
   UAS_FCU(uas)->send_message(&msg);
 }
 

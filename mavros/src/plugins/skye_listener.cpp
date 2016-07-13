@@ -47,20 +47,23 @@ void initialize(UAS &uas_){
   force_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/position_ctrl_output", 10);
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
   seq_id = 0;
+  duration_allocation_force = ros::Duration(0.5);
 
+  allocator_out_msg.thrust.resize(skye_base.getAuNumber(), 0.0);
+  allocator_out_msg.angle.resize(skye_base.getAuNumber(), 0.0);
 //  debug_srv_ = nh.advertiseService("/skye_mr/debug_srv",
 //                                   &SkyeListenerPlugin::debug_srv, this);
 
-  time_last_pos_ctrl_out = time_last_att_ctrl_out = time_last_allocator_out = ros::Time::now();
+  time_last_pos_ctrl_out = time_last_att_ctrl_out = time_last_allocator_out_au1 = ros::Time::now();
 }
 
 //-----------------------------------------------------------------------------
 const message_map get_rx_handlers(){
   return {
     MESSAGE_HANDLER(MAVLINK_MSG_ID_ATTITUDE_CTRL_OUTPUT, &SkyeListenerPlugin::handle_att_ctrl_out),
-    MESSAGE_HANDLER(MAVLINK_MSG_ID_ALLOCATION_OUTPUT, &SkyeListenerPlugin::handle_allocator_out),
+    MESSAGE_HANDLER(MAVLINK_MSG_ID_ALLOCATION_OUTPUT_ID, &SkyeListenerPlugin::handle_allocator_out),
     MESSAGE_HANDLER(MAVLINK_MSG_ID_POSITION_CTRL_OUTPUT, &SkyeListenerPlugin::handle_pos_ctrl_out),
-    MESSAGE_HANDLER(MAVLINK_MSG_ID_SKYE_DEBUG_VEC3, &SkyeListenerPlugin::handle_debug_vec3)
+    MESSAGE_HANDLER(MAVLINK_MSG_ID_DEBUG_VEC3, &SkyeListenerPlugin::handle_debug_vec3)
   };
 }
 
@@ -78,10 +81,13 @@ private:
 //  ros::ServiceServer debug_srv_; /*< debugging service. */
   skye_base::SkyeBase skye_base;
 
+  ros::Duration duration_allocation_force; /*< duration of the applied 2D force on every AU. */
+  skye_ros::AllocatorOutput allocator_out_msg; /*< collection of outputs of allocator app. */
+
   //"last time" variables
   ros::Time time_last_pos_ctrl_out;
   ros::Time time_last_att_ctrl_out;
-  ros::Time time_last_allocator_out;
+  ros::Time time_last_allocator_out_au1;
 
 //-----------------------------------------------------------------------------
 void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
@@ -227,11 +233,10 @@ void compute_resulting_wrench_center_aus(const skye_ros::AllocatorOutput &alloca
 void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
 
   // Apply a 2D force to each AU based on the output of the allocator
-  mavlink_allocation_output_t allocator_output;
-  mavlink_msg_allocation_output_decode(msg, &allocator_output);
+  mavlink_allocation_output_id_t allocator_output_id;
+  mavlink_msg_allocation_output_id_decode(msg, &allocator_output_id);
+  const int au_id = allocator_output_id.id;
 
-  //auto allocator_out_msg = boost::make_shared<skye_ros::AllocatorOutput>();
-  skye_ros::AllocatorOutput allocator_out_msg;
   geometry_msgs::Wrench wrench_center_aus_msg;
 
   // fill
@@ -240,38 +245,48 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   allocator_out_msg.header.frame_id = "0";
 
   skye_ros::ApplyForce2DCogBf  srv;
-  srv.request.start_time = ros::Time::now();
+  ros::Time time_now = ros::Time::now();
+  srv.request.start_time = time_now;
 
   /* Force application duration should be greater than the actual
    * time elapsed between two consecutive requests of force application, otherwise
    * when "force_duration" is elapsed force's components go to 0.
-   * Use the time difference between last two questes as estimate of next time
-   * difference. Multuple by duration_multiplier to increase the estimated duration.
+   * Use the time difference between last two requestes for AU1 as estimate of next time
+   * difference for very AUs. Multuple by duration_multiplier to increase the estimated duration.
    */
-  srv.request.duration = (srv.request.start_time - time_last_allocator_out) * kDurationMultiplier;
+  if(au_id == 0){
+      //first AU used to compute time difference
+      duration_allocation_force = (time_now - time_last_allocator_out_au1) * kDurationMultiplier;
+  }
 
-  for(int i = 0; i < skye_base.getAuNumber(); i++){
-    srv.request.Fx = allocator_output.thrust[i] * cos(allocator_output.angle[i] * kDegToRad);
-    srv.request.Fy = allocator_output.thrust[i] * sin(allocator_output.angle[i] * kDegToRad);
+  srv.request.duration = duration_allocation_force;
 
-    allocator_out_msg.thrust[i] = allocator_output.thrust[i];
-    allocator_out_msg.angle[i] = allocator_output.angle[i];
 
-    // Should we use allocator output ?
-    if(skye_base.useAllocatorOutput()){
-      // call service if available
-      if(skye_base.isAuForce2DAvail(i)){ //TODO restore me
-        if(skye_base.setAuForce2D(srv, i)){
-          //ROS_INFO("force applied!");
-        }
-        else{
-          ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(i+1));
-        }
+  srv.request.Fx = allocator_output_id.thrust * cos(allocator_output_id.angle * kDegToRad);
+  srv.request.Fy = allocator_output_id.thrust * sin(allocator_output_id.angle * kDegToRad);
+
+  allocator_out_msg.thrust[au_id] = allocator_output_id.thrust;
+  allocator_out_msg.angle[au_id] = allocator_output_id.angle;
+
+  // Should we use allocator output ?
+  if(skye_base.useAllocatorOutput()){
+    // call service if available
+    if(skye_base.isAuForce2DAvail(au_id)){
+      if(skye_base.setAuForce2D(srv, au_id)){
+        //ROS_INFO("force applied!");
+      }
+      else{
+        ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(au_id+1));
       }
     }
   }
 
-  time_last_allocator_out = srv.request.start_time;
+
+  if(au_id == 0){
+      //first AU used to compute time difference
+      time_last_allocator_out_au1 = time_now;
+  }
+
 
   //debugging: check allocation duration
 //  static ros::Publisher alloc_duration_pub = nh.advertise<std_msgs::Duration>("/skye_px4/allocator_duration", 10);
@@ -294,14 +309,14 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   //end debugging
 
   // publish
-  allocator_output_pub.publish(allocator_out_msg);
+  allocator_output_pub.publish(allocator_out_msg); // TODO ADAPT ME WITH NEW CASE
   wrench_center_aus_pub.publish(wrench_center_aus_msg);
 }
 
 //-----------------------------------------------------------------------------
 void handle_debug_vec3(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid){
-  mavlink_skye_debug_vec3_t debug_vec3;
-  mavlink_msg_skye_debug_vec3_decode(msg, &debug_vec3);
+  mavlink_debug_vec3_t debug_vec3;
+  mavlink_msg_debug_vec3_decode(msg, &debug_vec3);
 
   auto vector3_msg = boost::make_shared<geometry_msgs::Vector3Stamped>();
 
