@@ -99,7 +99,7 @@ target_link_libraries(mavros
 add_dependencies(mavros mavros_msgs_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_library(mavros_plugins
-  src/plugins/dummy.cpp
+# src/plugins/dummy.cpp
 #  src/plugins/sys_status.cpp
 #  src/plugins/sys_time.cpp
 #  src/plugins/imu_pub.cpp
@@ -123,6 +123,7 @@ add_library(mavros_plugins
 #  src/plugins/altitude.cpp
   #src/plugins/skye_talker.cpp #Skye
   #src/plugins/skye_listener.cpp #Skye
+  src/plugins/skye_attitude_ctrl_output.cpp #Skye
 )
 add_dependencies(mavros_plugins
   mavros
