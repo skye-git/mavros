@@ -67,6 +67,10 @@
         </class>-->
 
 	<!-- Skye harware in the loop -->
+  <class name="skye_heartbeat" type="mavplugin::SkyeHeartbeat" base_class_type="mavplugin::MavRosPlugin">
+    <description>Once the first heartbeat has been received from the FMU, send the HIL flag and enable
+    all the AUs.</description>
+  </class>
   <class name="skye_attitude_ctrl_output" type="mavplugin::SkyeAttitudeCtrlOutputPlugin" base_class_type="mavplugin::MavRosPlugin">
     <description>Read attitude_ctrl_output mavlink message, received from the FMU, and publishes it in ROS.
     If the allocation output is not used, then applies the requestes torque to the center of the Hull.</description>

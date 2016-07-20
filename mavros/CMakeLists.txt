@@ -90,7 +90,7 @@ add_library(mavros
   src/lib/mavros.cpp
   src/lib/mavlink_diag.cpp
   src/lib/rosconsole_bridge.cpp
-  #src/lib/skye_base.cpp #Skye
+  src/lib/skye_common_helpers.cpp #Skye
 )
 target_link_libraries(mavros
   ${catkin_LIBRARIES}
@@ -124,6 +124,7 @@ add_library(mavros_plugins
   #src/plugins/skye_talker.cpp #Skye
   #src/plugins/skye_listener.cpp #Skye
   src/plugins/skye_attitude_ctrl_output.cpp #Skye
+  src/plugins/skye_heartbeat.cpp #Skye
 )
 add_dependencies(mavros_plugins
   mavros
