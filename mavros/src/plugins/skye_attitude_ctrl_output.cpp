@@ -41,7 +41,8 @@ namespace mavplugin {
 class SkyeAttitudeCtrlOutputPlugin : public MavRosPlugin {
 public:
   SkyeAttitudeCtrlOutputPlugin() :
-    nh("~"),
+    nh_private("~"),
+    nh_public(),
     uas(nullptr)
   { };
 
@@ -53,15 +54,16 @@ public:
     uas = &uas_;
 
     // Publisher attitude controller output
-    attidtue_ctrl_output_pub = nh.advertise<geometry_msgs::Vector3>(
+    attidtue_ctrl_output_pub = nh_private.advertise<geometry_msgs::Vector3>(
                                "skye_px4/attitude_ctrl_output",
                                10);
 
     // Check if we should apply the requested torque to the Hull.
-    nh.param<bool>("use_allocator_output", use_allocator_output, false);
+    nh_private.param<bool>("use_allocator_output", use_allocator_output, false);
 
     if (!use_allocator_output) {
-      body_torque_requested_pub = nh.advertise<geometry_msgs::Vector3>(
+      // Use public node handle, most likely body_wrench plugin is listening there
+      body_torque_requested_pub = nh_public.advertise<geometry_msgs::Vector3>(
                                   "skye_gz/hull/torque_desired",
                                   10);
     }
@@ -81,7 +83,8 @@ public:
   }
 
 private:
-  ros::NodeHandle nh;
+  ros::NodeHandle nh_private;
+  ros::NodeHandle nh_public;
   UAS *uas;
 
   ros::Publisher attidtue_ctrl_output_pub; /*< publisher of attitide controller output. */
