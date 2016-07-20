@@ -44,5 +44,27 @@ void set_parameter(mavros::UAS *uas, std::string param_name, int param_value);
  */
 void set_parameter(mavros::UAS *uas, std::string param_name, float param_value);
 
+/**
+ * Check if a topic can be published, based on the requested frequency.
+ *
+ * Updates automatically last_time.
+ */
+template<typename ClockType>
+bool publish_now(ClockType &last_time, const double &publishing_frequency) {
+
+  ClockType t_now = ClockType::now();
+  double time_elapsed = t_now.toSec() - last_time.toSec();
+
+  if (time_elapsed >= (1.0 / publishing_frequency)) {
+    // The topic can be sent
+    last_time = t_now;
+    return true;
+  }
+
+  // Not enough time has elapsed
+  return false;
+}
+
+
 
 #endif // SKYE_COMMON_HELPERS_H

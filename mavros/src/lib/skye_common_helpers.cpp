@@ -32,7 +32,7 @@
 
 
 //-----------------------------------------------------------------------------
-void set_parameter(mavros::UAS *uas, std::string param_name, int param_value){
+void set_parameter(mavros::UAS *uas, std::string param_name, int param_value) {
 
   /*mavlink_message_t msg;
   float *float_var = (float*)(&param_value);//todo find a better solution to this workaround
@@ -52,7 +52,7 @@ void set_parameter(mavros::UAS *uas, std::string param_name, int param_value){
 }
 
 //-----------------------------------------------------------------------------
-void set_parameter(mavros::UAS *uas, std::string param_name, float param_value){
+void set_parameter(mavros::UAS *uas, std::string param_name, float param_value) {
 
   mavlink_message_t msg;
   char c_buffer[16]; // 16 is the maximum length of mavlink param name
@@ -66,3 +66,4 @@ void set_parameter(mavros::UAS *uas, std::string param_name, float param_value){
                                   MAV_PARAM_TYPE_REAL32);
   UAS_FCU(uas)->send_message(&msg);
 }
+
