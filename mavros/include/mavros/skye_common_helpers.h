@@ -39,5 +39,10 @@
  */
 void set_parameter(mavros::UAS *uas, std::string param_name, int param_value);
 
+/**
+ * Set a float parameter on the FMU.
+ */
+void set_parameter(mavros::UAS *uas, std::string param_name, float param_value);
+
 
 #endif // SKYE_COMMON_HELPERS_H
