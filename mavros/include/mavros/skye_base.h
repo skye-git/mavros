@@ -13,10 +13,10 @@
 #include <Eigen/Core>
 #include<Eigen/StdVector>
 
-#include "skye_ros/ApplyWrenchCogBf.h"
-#include "skye_ros/ApplyForceBf.h"
-#include "skye_ros/ApplyTorqueBf.h"
-#include "skye_ros/ApplyForce2DCogBf.h"
+//#include "skye_ros/ApplyWrenchCogBf.h"
+//#include "skye_ros/ApplyForceBf.h"
+//#include "skye_ros/ApplyTorqueBf.h"
+//#include "skye_ros/ApplyForce2DCogBf.h" //TODO fix me
 
 namespace skye_base
 {
@@ -34,22 +34,22 @@ public:
   /**
    * @brief Set body wrench in the CoG of the hull. Wrench expressed in body frame.
    */
-  bool setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv);
+//  bool setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv); //TODO fix me
 
   /**
    * @brief Set body force in the CoG of the hull. Force expressed in body frame.
    */
-  bool setBodyForce(skye_ros::ApplyForceBf &force_srv);
+//  bool setBodyForce(skye_ros::ApplyForceBf &force_srv); //TODO fix me
 
   /**
    * @brief Set body torque in the CoG of the hull. Torque expressed in body frame.
    */
-  bool setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv);
+//  bool setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv); //TODO fix me
 
   /**
    * @brief Set 2D force in the specified AU number: 0 to au_number in yalm file.
    */
-  bool setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index);
+//  bool setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index); //TODO fix me
 
   /**
    * @brief Check if body wrench service is available.

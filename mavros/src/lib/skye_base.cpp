@@ -23,18 +23,18 @@ SkyeBase::SkyeBase()
 
   // Service clients
   apply_wrench_service_name_ = "/skye_gz/" + hull_name_ + "/apply_wrench"; 
-  apply_wrench_hull_cog_ = nh_.serviceClient<skye_ros::ApplyWrenchCogBf>(apply_wrench_service_name_);
+//  apply_wrench_hull_cog_ = nh_.serviceClient<skye_ros::ApplyWrenchCogBf>(apply_wrench_service_name_);//TODO fix me
 
   for(int i = 0; i < au_number_; i++){
     apply_au_force_service_name_.push_back("/skye_gz/" + au_base_name_ + std::to_string(i+1) + "/apply_force_2D");
-    apply_au_force_2d_.push_back(nh_.serviceClient<skye_ros::ApplyForce2DCogBf>(apply_au_force_service_name_[i]));
+//    apply_au_force_2d_.push_back(nh_.serviceClient<skye_ros::ApplyForce2DCogBf>(apply_au_force_service_name_[i]));//TODO fix me
   }
 
   apply_force_service_name_ = "/skye_gz/" + hull_name_ + "/apply_force";
-  apply_force_hull_cog_ = nh_.serviceClient<skye_ros::ApplyForceBf>(apply_force_service_name_);
+//  apply_force_hull_cog_ = nh_.serviceClient<skye_ros::ApplyForceBf>(apply_force_service_name_);//TODO fix me
 
   apply_torque_service_name_ = "/skye_gz/" + hull_name_ + "/apply_torque";
-  apply_torque_hull_cog_ = nh_.serviceClient<skye_ros::ApplyTorqueBf>(apply_torque_service_name_);
+//  apply_torque_hull_cog_ = nh_.serviceClient<skye_ros::ApplyTorqueBf>(apply_torque_service_name_);//TODO fix me
   
 }
 
@@ -44,51 +44,51 @@ std::string SkyeBase::getImuTopicName(){
 }
 
 //-----------------------------------------------------------------------------
-bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
-  // check service is available
-  if(isBodyWrenchAvail()){ // check if service is available
-    //check if we can use it
-    if(!use_allocator_output_)
-      return apply_wrench_hull_cog_.call(wrench_srv);
-  }
+//bool SkyeBase::setBodyWrench(skye_ros::ApplyWrenchCogBf &wrench_srv){
+//  // check service is available
+//  if(isBodyWrenchAvail()){ // check if service is available
+//    //check if we can use it
+//    if(!use_allocator_output_)
+//      return apply_wrench_hull_cog_.call(wrench_srv);
+//  }
 
-  return false; // service not available
-}
-
-//-----------------------------------------------------------------------------
-bool SkyeBase::setBodyForce(skye_ros::ApplyForceBf &force_srv){
-  // check service is available
-  if(isBodyForceAvail()){ // check if service is available
-    //check if we can use it
-    if(!use_allocator_output_)
-      return apply_force_hull_cog_.call(force_srv);
-  }
-
-  return false; // service not available
-}
+//  return false; // service not available
+//}//TODO fix me
 
 //-----------------------------------------------------------------------------
-bool SkyeBase::setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv){
-  // check service is available
-  if(isBodyTorqueAvail()) // check if service is available
-    return apply_torque_hull_cog_.call(torque_srv);
-  else
-    return false; // service not available
-}
+//bool SkyeBase::setBodyForce(skye_ros::ApplyForceBf &force_srv){
+//  // check service is available
+//  if(isBodyForceAvail()){ // check if service is available
+//    //check if we can use it
+//    if(!use_allocator_output_)
+//      return apply_force_hull_cog_.call(force_srv);
+//  }
+
+//  return false; // service not available
+//}//TODO fix me
 
 //-----------------------------------------------------------------------------
-bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index){
-  // check service is available & index < number of AUs
-  if(isAuForce2DAvail(au_index) && au_index < au_number_){ // check if service is available
-    ros::ServiceClient force2D_client = apply_au_force_2d_.at(au_index);
+//bool SkyeBase::setBodyTorque(skye_ros::ApplyTorqueBf &torque_srv){
+//  // check service is available
+//  if(isBodyTorqueAvail()) // check if service is available
+//    return apply_torque_hull_cog_.call(torque_srv);
+//  else
+//    return false; // service not available
+//}//TODO fix me
 
-    //check if we can use it
-    if(use_allocator_output_)
-      return force2D_client.call(force2D_srv);
-  }
+//-----------------------------------------------------------------------------
+//bool SkyeBase::setAuForce2D(skye_ros::ApplyForce2DCogBf &force2D_srv, const int &au_index){
+//  // check service is available & index < number of AUs
+//  if(isAuForce2DAvail(au_index) && au_index < au_number_){ // check if service is available
+//    ros::ServiceClient force2D_client = apply_au_force_2d_.at(au_index);
 
-  return false; // service not available
-}
+//    //check if we can use it
+//    if(use_allocator_output_)
+//      return force2D_client.call(force2D_srv);
+//  }
+
+//  return false; // service not available
+//}//TODO fix me
 
 //-----------------------------------------------------------------------------
 bool SkyeBase::isBodyWrenchAvail(){

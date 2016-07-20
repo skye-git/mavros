@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   mavros_msgs
   skye_ros #Skye - ROS interface
+  skye_msgs #Skye - Messages
   mavlink #Skye - custom mavlink package
   spacenav_node # Skye - 3Dconnexion ros package to read 3D mouse inputs
 )
@@ -59,7 +60,7 @@ catkin_python_setup()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavros
-  CATKIN_DEPENDS diagnostic_msgs diagnostic_updater pluginlib roscpp sensor_msgs nav_msgs std_msgs tf2_ros geometry_msgs libmavconn message_runtime eigen_conversions mavros_msgs
+  CATKIN_DEPENDS diagnostic_msgs diagnostic_updater pluginlib roscpp sensor_msgs nav_msgs std_msgs tf2_ros geometry_msgs libmavconn message_runtime eigen_conversions mavros_msgs skye_msgs
   DEPENDS Boost Eigen
 )
 
@@ -89,7 +90,7 @@ add_library(mavros
   src/lib/mavros.cpp
   src/lib/mavlink_diag.cpp
   src/lib/rosconsole_bridge.cpp
-  src/lib/skye_base.cpp #Skye
+  #src/lib/skye_base.cpp #Skye
 )
 target_link_libraries(mavros
   ${catkin_LIBRARIES}
@@ -98,7 +99,7 @@ target_link_libraries(mavros
 add_dependencies(mavros mavros_msgs_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_library(mavros_plugins
-#  src/plugins/dummy.cpp
+  src/plugins/dummy.cpp
 #  src/plugins/sys_status.cpp
 #  src/plugins/sys_time.cpp
 #  src/plugins/imu_pub.cpp
@@ -120,8 +121,8 @@ add_library(mavros_plugins
 #  src/plugins/actuator_control.cpp
 #  src/plugins/manual_control.cpp
 #  src/plugins/altitude.cpp
-  src/plugins/skye_talker.cpp #Skye 
-  src/plugins/skye_listener.cpp #Skye 
+  #src/plugins/skye_talker.cpp #Skye
+  #src/plugins/skye_listener.cpp #Skye
 )
 add_dependencies(mavros_plugins
   mavros

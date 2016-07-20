@@ -18,9 +18,11 @@
 #include <std_srvs/Empty.h>
 
 #include "mavros/skye_base.h"
-#include "skye_ros/ApplyForceBf.h"
-#include "skye_ros/ApplyTorqueBf.h"
-#include "skye_ros/AllocatorOutput.h"
+#include "skye_msgs/AllocatorOutput.h"
+
+//#include "skye_ros/ApplyForceBf.h"
+//#include "skye_ros/ApplyTorqueBf.h"
+//#include "skye_ros/AllocatorOutput.h"
 
 static const double kDegToRad = M_PI / 180.0;
 static const int kDurationMultiplier = 5;
@@ -42,7 +44,7 @@ public:
 void initialize(UAS &uas_){
   uas = &uas_;
   torque_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/attitude_ctrl_output", 10);
-  allocator_output_pub = nh.advertise<skye_ros::AllocatorOutput>("/skye_px4/allocator_output", 10);
+  allocator_output_pub = nh.advertise<skye_msgs::AllocatorOutput>("/skye_px4/allocator_output", 10);
   wrench_center_aus_pub = nh.advertise<geometry_msgs::Wrench>("/skye_px4/wrench_center_aus", 10);
   force_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/position_ctrl_output", 10);
   debug_vec3_pub = nh.advertise<geometry_msgs::Vector3Stamped>("/skye_px4/debug_vec3", 10);
@@ -82,7 +84,7 @@ private:
   skye_base::SkyeBase skye_base;
 
   ros::Duration duration_allocation_force; /*< duration of the applied 2D force on every AU. */
-  skye_ros::AllocatorOutput allocator_out_msg; /*< collection of outputs of allocator app. */
+  skye_msgs::AllocatorOutput allocator_out_msg; /*< collection of outputs of allocator app. */
 
   //"last time" variables
   ros::Time time_last_pos_ctrl_out;
@@ -109,14 +111,14 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   torque_pub.publish(vector3_msg);
 
   // apply the torque to Gazebo
-  skye_ros::ApplyTorqueBf  srv;
+//  skye_ros::ApplyTorqueBf  srv; //TODO fix me
 
   // set torque, it's applied relative to the link's frame
-  srv.request.torque.x = attiude_ctrl_output.M_x;
-  srv.request.torque.y = attiude_ctrl_output.M_y;
-  srv.request.torque.z = attiude_ctrl_output.M_z;
+//  srv.request.torque.x = attiude_ctrl_output.M_x;
+//  srv.request.torque.y = attiude_ctrl_output.M_y;
+//  srv.request.torque.z = attiude_ctrl_output.M_z;
 
-  srv.request.start_time = ros::Time::now();
+//  srv.request.start_time = ros::Time::now(); //TODO fix me
 
   /* Torque application duration should be greater than the actual
    * time elapsed between two consecutive requests of torque application, otherwise
@@ -124,20 +126,20 @@ void handle_att_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    * Use the time difference between last two questes as estimate of next time
    * difference. Multuple by duration_multiplier to increase the estimated duration.
    */
-  srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
+//  srv.request.duration = (srv.request.start_time - time_last_att_ctrl_out) * kDurationMultiplier;
 
-  // Should we use attitude controller output instead of allocator output?
-  if(!skye_base.useAllocatorOutput()){
-    // call service if available
-    if(skye_base.isBodyTorqueAvail()){
-      if(skye_base.setBodyTorque(srv)){
-        //ROS_INFO("wrench applied!");
-      }
-      else{
-        ROS_ERROR("[skye_listener] Failed to apply body torque");
-      }
-    }
-  }
+//  // Should we use attitude controller output instead of allocator output?
+//  if(!skye_base.useAllocatorOutput()){
+//    // call service if available
+//    if(skye_base.isBodyTorqueAvail()){
+//      if(skye_base.setBodyTorque(srv)){
+//        //ROS_INFO("wrench applied!");
+//      }
+//      else{
+//        ROS_ERROR("[skye_listener] Failed to apply body torque");
+//      }
+//    }
+//  } //TODO fix me
 
   time_last_att_ctrl_out = srv.request.start_time;
 
@@ -163,14 +165,14 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
   force_pub.publish(vector3_msg);
 
   // apply the force to Gazebo
-  skye_ros::ApplyForceBf  srv;
+//  skye_ros::ApplyForceBf  srv; //TODO fix me
 
   // set force, it's applied relative to the link's frame
-  srv.request.force.x = position_ctrl_output.F_x;
-  srv.request.force.y = position_ctrl_output.F_y;
-  srv.request.force.z = position_ctrl_output.F_z;
+//  srv.request.force.x = position_ctrl_output.F_x;
+//  srv.request.force.y = position_ctrl_output.F_y;
+//  srv.request.force.z = position_ctrl_output.F_z;
 
-  srv.request.start_time = ros::Time::now();
+//  srv.request.start_time = ros::Time::now();//TODO fix me
 
   /* Force application duration should be greater than the actual
    * time elapsed between two consecutive requests of force application, otherwise
@@ -178,27 +180,27 @@ void handle_pos_ctrl_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t co
    * Use the time difference between last two questes as estimate of next time
    * difference. Multuple by duration_multiplier to increase the estimated duration.
    */
-  srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier;
+//  srv.request.duration = (srv.request.start_time - time_last_pos_ctrl_out) * kDurationMultiplier; //TODO fix me
 
   // Should we use attitude controller output instead of allocator output?
-  if(!skye_base.useAllocatorOutput()){
-    // call service if available
-    if(skye_base.isBodyForceAvail()){
-      if(skye_base.setBodyForce(srv)){
-        //ROS_INFO("wrench applied!");
-      }
-      else{
-        ROS_ERROR("[skye_listener] Failed to apply body force");
-      }
-    }
-  }
+//  if(!skye_base.useAllocatorOutput()){ //TODO fix me
+//    // call service if available
+//    if(skye_base.isBodyForceAvail()){
+//      if(skye_base.setBodyForce(srv)){
+//        //ROS_INFO("wrench applied!");
+//      }
+//      else{
+//        ROS_ERROR("[skye_listener] Failed to apply body force");
+//      }
+//    }
+//  }
 
   time_last_pos_ctrl_out = srv.request.start_time;
 
 }
 
 //-----------------------------------------------------------------------------
-void compute_resulting_wrench_center_aus(const skye_ros::AllocatorOutput &allocator_out_msg,
+void compute_resulting_wrench_center_aus(const skye_msgs::AllocatorOutput &allocator_out_msg,
                                          geometry_msgs::Wrench &wrench_center_aus_msg){
 
   Eigen::Matrix<double,3,1> Fi_au; // force produced by AU i, expresses in AU's frame
@@ -244,9 +246,9 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
   allocator_out_msg.header.stamp = ros::Time::now();
   allocator_out_msg.header.frame_id = "0";
 
-  skye_ros::ApplyForce2DCogBf  srv;
-  ros::Time time_now = ros::Time::now();
-  srv.request.start_time = time_now;
+//  skye_ros::ApplyForce2DCogBf  srv;
+//  ros::Time time_now = ros::Time::now();
+//  srv.request.start_time = time_now; //TODO fix me
 
   /* Force application duration should be greater than the actual
    * time elapsed between two consecutive requests of force application, otherwise
@@ -259,27 +261,27 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
       duration_allocation_force = (time_now - time_last_allocator_out_au1) * kDurationMultiplier;
   }
 
-  srv.request.duration = duration_allocation_force;
+//  srv.request.duration = duration_allocation_force;
 
 
-  srv.request.Fx = allocator_output_id.thrust * cos(allocator_output_id.angle * kDegToRad);
-  srv.request.Fy = allocator_output_id.thrust * sin(allocator_output_id.angle * kDegToRad);
+//  srv.request.Fx = allocator_output_id.thrust * cos(allocator_output_id.angle * kDegToRad);
+//  srv.request.Fy = allocator_output_id.thrust * sin(allocator_output_id.angle * kDegToRad); //TODO fix me
 
   allocator_out_msg.thrust[au_id] = allocator_output_id.thrust;
   allocator_out_msg.angle[au_id] = allocator_output_id.angle;
 
-  // Should we use allocator output ?
-  if(skye_base.useAllocatorOutput()){
-    // call service if available
-    if(skye_base.isAuForce2DAvail(au_id)){
-      if(skye_base.setAuForce2D(srv, au_id)){
-        //ROS_INFO("force applied!");
-      }
-      else{
-        ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(au_id+1));
-      }
-    }
-  }
+//  // Should we use allocator output ?
+//  if(skye_base.useAllocatorOutput()){
+//    // call service if available
+//    if(skye_base.isAuForce2DAvail(au_id)){
+//      if(skye_base.setAuForce2D(srv, au_id)){
+//        //ROS_INFO("force applied!");
+//      }
+//      else{
+//        ROS_ERROR_STREAM("[skye_listener] Failed to apply 2D force to AU " << std::to_string(au_id+1));
+//      }
+//    }
+//  } //TODO fix me
 
 
   if(au_id == 0){
@@ -310,7 +312,7 @@ void handle_allocator_out(const mavlink_message_t *msg, uint8_t sysid, uint8_t c
 
   // publish
   allocator_output_pub.publish(allocator_out_msg); // TODO ADAPT ME WITH NEW CASE
-  wrench_center_aus_pub.publish(wrench_center_aus_msg);
+  //wrench_center_aus_pub.publish(wrench_center_aus_msg); //TODO fix me
 }
 
 //-----------------------------------------------------------------------------
