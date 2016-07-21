@@ -50,8 +50,7 @@ public:
     nh_public(),
     uas(nullptr),
     user_3d_mouse_last_time(Time3dMouse::now()),
-    sending_step_command(false),
-    pTwistStepCommand(new geometry_msgs::Twist())
+    sending_step_command(false)
   { };
 
 //-----------------------------------------------------------------------------
@@ -101,7 +100,7 @@ private:
   geometry_msgs::Twist setpoint_6dof_sent; /* 6DOF setpoint sent to the FMU .*/
   ros::ServiceServer send_step_srv; /* Service to send a step setpoint_6dof .*/
   bool sending_step_command; /* Indicates if a step command is being sent.  */
-  geometry_msgs::TwistPtr pTwistStepCommand; /* Step command twis. */
+  geometry_msgs::Twist twist_step_command; /* Step command twis. */
 
   // Timers to send fixed duration step command
   TimerStepCommand timerSendStepCommand; /* Step command timer. */
@@ -111,7 +110,7 @@ private:
   /**
    * This function sends a "setpoint_6dof" mavlink message to the FMU.
    */
-  void send_user_setpoint(const geometry_msgs::TwistConstPtr &ptwist){
+  void send_user_setpoint(const geometry_msgs::Twist &twist){
 
     // should we send the message now or wait a little bit more?
     if (publish_now(user_3d_mouse_last_time, kUser3DMouseSendingFrequency)) {
@@ -120,13 +119,12 @@ private:
       float linear_x, linear_y, linear_z; // linear velocities
       float angular_x, angular_y, angular_z; // angular velocities
 
-      // adapt input to Skye's local NED frame
-      linear_x = static_cast<float>(ptwist->linear.x);
-      linear_y = -static_cast<float>(ptwist->linear.y);
-      linear_z = -static_cast<float>(ptwist->linear.z);
-      angular_x = static_cast<float>(ptwist->angular.x);
-      angular_y = -static_cast<float>(ptwist->angular.y);
-      angular_z = -static_cast<float>(ptwist->angular.z);
+      linear_x = static_cast<float>(twist.linear.x);
+      linear_y = static_cast<float>(twist.linear.y);
+      linear_z = static_cast<float>(twist.linear.z);
+      angular_x = static_cast<float>(twist.angular.x);
+      angular_y = static_cast<float>(twist.angular.y);
+      angular_z = static_cast<float>(twist.angular.z);
 
       uint64_t timestamp = static_cast<uint64_t>(Time3dMouse::now().toNSec() / 1000.0); // in uSec
 
@@ -142,14 +140,8 @@ private:
 
       UAS_FCU(uas)->send_message(&msg);
 
-      // Publish in ROS the actual data sent to the FMU
-      setpoint_6dof_sent.linear.x = linear_x;
-      setpoint_6dof_sent.linear.y = linear_y;
-      setpoint_6dof_sent.linear.z = linear_z;
-      setpoint_6dof_sent.angular.x = angular_x;
-      setpoint_6dof_sent.angular.y = angular_y;
-      setpoint_6dof_sent.angular.z = angular_z;
-      setpoint_6dof_pub.publish(*ptwist);
+      // Publish in ROS the data sent to the FMU
+      setpoint_6dof_pub.publish(twist);
     }
   }
 
@@ -159,8 +151,17 @@ private:
    */
   void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 
-    if(!sending_step_command) //only if step service is not being using
-      send_user_setpoint(twist_teleop);
+    if (!sending_step_command) { //only if step service is not being using
+      // adapt input to Skye's local NED frame
+      geometry_msgs::Twist twist_ned = *twist_teleop;
+
+      twist_ned.linear.y *= -1.0;
+      twist_ned.linear.z *= -1.0;
+      twist_ned.angular.y *= -1.0;
+      twist_ned.angular.z *= -1.0;
+
+      send_user_setpoint(twist_ned);
+    }
   }
 
   //-----------------------------------------------------------------------------
@@ -169,7 +170,7 @@ private:
    */
   void callback_send_step_command(const ros::WallTimerEvent&){
 
-    send_user_setpoint(pTwistStepCommand);
+    send_user_setpoint(twist_step_command);
   }
 
   //-----------------------------------------------------------------------------
@@ -194,14 +195,13 @@ private:
     sending_step_command = true;
 
     // Save step command
-    // Y and Z signes are changed in send_user_setpoint to be adapted to NED convention
-    pTwistStepCommand->linear.x = req.linear_x;
-    pTwistStepCommand->linear.y = -req.linear_y;
-    pTwistStepCommand->linear.z = -req.linear_z;
+    twist_step_command.linear.x = req.linear_x;
+    twist_step_command.linear.y = req.linear_y;
+    twist_step_command.linear.z = req.linear_z;
 
-    pTwistStepCommand->angular.x = req.angular_x;
-    pTwistStepCommand->angular.y = -req.angular_y;
-    pTwistStepCommand->angular.z = -req.angular_z;
+    twist_step_command.angular.x = req.angular_x;
+    twist_step_command.angular.y = req.angular_y;
+    twist_step_command.angular.z = req.angular_z;
 
     // Activate timers: one to send preidically step command and
     // another one to stop the first after a fixed time
