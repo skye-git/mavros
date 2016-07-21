@@ -32,12 +32,15 @@
 #include <pluginlib/class_list_macros.h>
 #include <mavros/skye_common_helpers.h>
 #include <geometry_msgs/Twist.h>
+#include "mavros_msgs/SkyeSendStep.h"
 
 namespace mavplugin {
 
 //settings
 const double kUser3DMouseSendingFrequency = 25.0; // [Hz]
 typedef ros::WallTime Time3dMouse; // Use wallclock to send 3D mouse
+typedef ros::WallTimer TimerStepCommand; // Use wallclock to send a step command
+typedef ros::WallDuration DurationStepCommand; // Use wallclock to send a step command
 
 class SkyeSetpoint6DofPlugin : public MavRosPlugin {
 public:
@@ -46,7 +49,9 @@ public:
     nh_private("~"),
     nh_public(),
     uas(nullptr),
-    user_3d_mouse_last_time(Time3dMouse::now())
+    user_3d_mouse_last_time(Time3dMouse::now()),
+    sending_step_command(false),
+    pTwistStepCommand(new geometry_msgs::Twist())
   { };
 
 //-----------------------------------------------------------------------------
@@ -61,10 +66,18 @@ public:
     joystick_teleoperate_sub = nh_public.subscribe(
                                 "/spacenav/twist",
                                 10,
-                                &SkyeSetpoint6DofPlugin::joystick_teleop_callback, this);
+                                &SkyeSetpoint6DofPlugin::joystick_teleop_callback,
+                                this);
 
     // Advertise topic where final 3D mouse inputs, sent to the FMU, are displayed
-    setpoint_6dof_pub = nh_private.advertise<geometry_msgs::Twist>("setpoint_6dof", 10);
+    setpoint_6dof_pub = nh_private.advertise<geometry_msgs::Twist>("setpoint_6dof",
+                                                                   10);
+
+    // Advertise service to send a step command for limited amount fo time
+    send_step_srv = nh_private.advertiseService(
+                              "send_step_setpoint_6dof",
+                              &SkyeSetpoint6DofPlugin::send_step_setpoint_6dof,
+                              this);
   }
 
 //-----------------------------------------------------------------------------
@@ -86,6 +99,13 @@ private:
   ros::Subscriber joystick_teleoperate_sub; // keyboard teleoperator
   ros::Publisher setpoint_6dof_pub; /*< User setpoint sent to px4. */
   geometry_msgs::Twist setpoint_6dof_sent; /* 6DOF setpoint sent to the FMU .*/
+  ros::ServiceServer send_step_srv; /* Service to send a step setpoint_6dof .*/
+  bool sending_step_command; /* Indicates if a step command is being sent.  */
+  geometry_msgs::TwistPtr pTwistStepCommand; /* Step command twis. */
+
+  // Timers to send fixed duration step command
+  TimerStepCommand timerSendStepCommand; /* Step command timer. */
+  TimerStepCommand timerStopStepCommand; /* Timer to stop sending step command. */
 
 //-----------------------------------------------------------------------------
   /**
@@ -139,9 +159,68 @@ private:
    */
   void joystick_teleop_callback(const geometry_msgs::TwistConstPtr &twist_teleop){
 
-//    if(!sending_step_command) //only if step service is not being using
-//      send_user_setpoint(twist_teleop);
-    send_user_setpoint(twist_teleop);
+    if(!sending_step_command) //only if step service is not being using
+      send_user_setpoint(twist_teleop);
+  }
+
+  //-----------------------------------------------------------------------------
+  /**
+   * This function gets call preiodically and sends a step command
+   */
+  void callback_send_step_command(const ros::WallTimerEvent&){
+
+    send_user_setpoint(pTwistStepCommand);
+  }
+
+  //-----------------------------------------------------------------------------
+  /**
+   * This function stops the periodically function which sends step commands
+   */
+  void callback_stop_step_command(const ros::WallTimerEvent&){
+
+    timerSendStepCommand.stop();
+    sending_step_command = false;
+    ROS_INFO("[skye_setpoint_6dof] sent step command");
+  }
+
+ //-----------------------------------------------------------------------------
+  /**
+   * This function gets call when a user requested to send a step command
+   */
+  bool send_step_setpoint_6dof(mavros_msgs::SkyeSendStep::Request &req,
+                               mavros_msgs::SkyeSendStep::Response &res) {
+
+    //prevent 3D mouse to send input while we are sending the step command
+    sending_step_command = true;
+
+    // Save step command
+    // Y and Z signes are changed in send_user_setpoint to be adapted to NED convention
+    pTwistStepCommand->linear.x = req.linear_x;
+    pTwistStepCommand->linear.y = -req.linear_y;
+    pTwistStepCommand->linear.z = -req.linear_z;
+
+    pTwistStepCommand->angular.x = req.angular_x;
+    pTwistStepCommand->angular.y = -req.angular_y;
+    pTwistStepCommand->angular.z = -req.angular_z;
+
+    // Activate timers: one to send preidically step command and
+    // another one to stop the first after a fixed time
+    timerSendStepCommand = nh_private.createWallTimer(
+                                DurationStepCommand(1.0/kUser3DMouseSendingFrequency), // sending frequency
+                                &SkyeSetpoint6DofPlugin::callback_send_step_command,
+                                this);
+
+    timerStopStepCommand = nh_private.createWallTimer(
+                                DurationStepCommand(req.duration.toSec()), // step duration
+                                &SkyeSetpoint6DofPlugin::callback_stop_step_command,
+                                this,
+                                true);  // shoot only once
+
+    ROS_INFO("[skye_setpoint_6dof] sending step command");
+
+    res.success = true;
+
+    return true;
   }
 
 };
