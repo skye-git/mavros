@@ -124,6 +124,7 @@ add_library(mavros_plugins
   #src/plugins/skye_talker.cpp #Skye
   #src/plugins/skye_listener.cpp #Skye
   src/plugins/skye_attitude_hil.cpp #Skye
+  src/plugins/skye_position_hil.cpp #Skye
   src/plugins/skye_attitude_ctrl_output.cpp #Skye
   src/plugins/skye_position_ctrl_output.cpp #Skye
   src/plugins/skye_heartbeat.cpp #Skye
