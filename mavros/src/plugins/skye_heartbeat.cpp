@@ -106,18 +106,6 @@ private:
 
 //-----------------------------------------------------------------------------
   /**
-   * This function gets call when we want to set default mode for attitude and pos ctrl
-   */
-  void set_default_control_modes() {
-
-    set_parameter(uas, "ATT_C_MOD", 1);
-    set_parameter(uas, "POS_C_MOD", 0);
-    ROS_INFO_STREAM(__FILE__ << ": set ATT_C_MOD to SKYE_ATT_C_MOD_5_DOF");
-    ROS_INFO_STREAM(__FILE__ << ": set POS_C_MOD to SKYE_POS_C_MOD_MANUAL");
-  }
-
-//-----------------------------------------------------------------------------
-  /**
    * This function gets call when a new heartbeat mavlink message is received
    */
   void handle_heartbeat(const mavlink_message_t *msg, uint8_t sysid, uint8_t compid) {
@@ -129,8 +117,6 @@ private:
         set_hil_mode(true);
         // Set allocation case to 0 to be able to use allocation output
         set_allocation_case(0);
-        // Set default control modes for attitude and position controller
-        set_default_control_modes();
         // Do not enter in this branch anymore
         received_first_heartbit = true;
     }
