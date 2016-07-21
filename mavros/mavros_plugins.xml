@@ -88,6 +88,9 @@
   <class name="skye_setpoint_6dof" type="mavplugin::SkyeSetpoint6DofPlugin" base_class_type="mavplugin::MavRosPlugin">
     <description>Send 3D mouse inputs to the FMU, using the mavlink message setpoint_6dof.</description>
   </class>
+  <class name="skye_helper_services" type="mavplugin::SkyeHelperServicesPlugin" base_class_type="mavplugin::MavRosPlugin">
+    <description>Common useful services to intercat with the FMU.</description>
+  </class>
 <!--	<class name="skye_talker" type="mavplugin::SkyeTalkerPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Send data from ROS to Skye.</description>
 	</class>

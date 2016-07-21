@@ -129,6 +129,7 @@ add_library(mavros_plugins
   src/plugins/skye_position_ctrl_output.cpp #Skye
   src/plugins/skye_heartbeat.cpp #Skye
   src/plugins/skye_setpoint_6dof.cpp #Skye
+  src/plugins/skye_helper_services.cpp #Skye
 )
 add_dependencies(mavros_plugins
   mavros
