@@ -14,7 +14,7 @@
   <arg name="use_urdf" default="true"/> <!-- Skye -->
 
   <!-- possible model names: tetra / enterprise_8aus / enterprise_6aus / enterprise_4aus / -->
-  <arg name="model_name" default="enterprise_6aus"/>
+  <arg name="model_name" default="tetra"/>
 
   <!-- Inflate Skye in Gazebo -->
   <include file="$(find skye_ros)/launch/inflate_skye.launch">
