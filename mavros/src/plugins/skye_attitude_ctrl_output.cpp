@@ -33,11 +33,7 @@
 #include <geometry_msgs/Vector3.h>
 
 namespace mavplugin {
-/**
-* @brief Dummy plugin.
-*
-* Example and "how to" for users.
-*/
+
 class SkyeAttitudeCtrlOutputPlugin : public MavRosPlugin {
 public:
   SkyeAttitudeCtrlOutputPlugin() :
