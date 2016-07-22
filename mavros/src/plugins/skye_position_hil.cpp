@@ -30,8 +30,12 @@
 #include <mavros/mavros_plugin.h>
 
 #include <pluginlib/class_list_macros.h>
-#include <sensor_msgs/Imu.h>
+#include <mavros/skye_common_helpers.h>
 #include <gazebo_msgs/LinkState.h>
+
+//settings
+const double kPositionHilSendingFrequency = 25.0; // [Hz]
+typedef ros::WallTime TimePositionHil; // Use wallclock to send attitude hil
 
 namespace mavplugin {
 
@@ -40,7 +44,8 @@ public:
   SkyePositionHilPlugin() :
     nh_private("~"),
     nh_public(),
-    uas(nullptr)
+    uas(nullptr),
+    attitude_hil_last_time(TimePositionHil::now())
   { };
 
   /**
@@ -75,33 +80,38 @@ private:
   UAS *uas;
 
   ros::Subscriber skye_ros_ground_truth_sub; /* Ground truth topic in Skye's IMU frame. */
+  TimePositionHil attitude_hil_last_time; /*< Last time position hil was sent to the FMU. */
 
 
   //-----------------------------------------------------------------------------
   void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
 
-    mavlink_message_t msg;
-    float x, y, z, vx, vy, vz;
+    // Should we send the message now or wait a little bit more?
+    if (publish_now(attitude_hil_last_time, kPositionHilSendingFrequency)) {
 
-    x = static_cast<float>(ground_truth->pose.position.x);
-    y = static_cast<float>(ground_truth->pose.position.y);
-    z = static_cast<float>(ground_truth->pose.position.z);
-    vx = static_cast<float>(ground_truth->twist.linear.x);
-    vy = static_cast<float>(ground_truth->twist.linear.y);
-    vz = static_cast<float>(ground_truth->twist.linear.z);
+      mavlink_message_t msg;
+      float x, y, z, vx, vy, vz;
 
-    uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+      x = static_cast<float>(ground_truth->pose.position.x);
+      y = static_cast<float>(ground_truth->pose.position.y);
+      z = static_cast<float>(ground_truth->pose.position.z);
+      vx = static_cast<float>(ground_truth->twist.linear.x);
+      vy = static_cast<float>(ground_truth->twist.linear.y);
+      vz = static_cast<float>(ground_truth->twist.linear.z);
 
-    // Send the skye_attitude_hil message to the FMU
-    mavlink_msg_position_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                       timestamp,
-                                       x,
-                                       y,
-                                       z,
-                                       vx,
-                                       vy,
-                                       vz);
-    UAS_FCU(uas)->send_message(&msg);
+      uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+
+      // Send the skye_attitude_hil message to the FMU
+      mavlink_msg_position_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                         timestamp,
+                                         x,
+                                         y,
+                                         z,
+                                         vx,
+                                         vy,
+                                         vz);
+      UAS_FCU(uas)->send_message(&msg);
+    }
   }
 
 };
