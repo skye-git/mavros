@@ -82,6 +82,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;
@@ -187,7 +188,6 @@ private:
 //-----------------------------------------------------------------------------
   bool set_skye_param(mavros_msgs::ParamSet::Request &req,
                       mavros_msgs::ParamSet::Response &res) {
-
 
     if (req.value.integer != 0) {
       int param = req.value.integer;

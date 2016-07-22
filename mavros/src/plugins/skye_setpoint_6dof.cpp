@@ -34,13 +34,13 @@
 #include <geometry_msgs/Twist.h>
 #include "mavros_msgs/SkyeSendStep.h"
 
-namespace mavplugin {
-
 //settings
 const double kUser3DMouseSendingFrequency = 25.0; // [Hz]
 typedef ros::WallTime Time3dMouse; // Use wallclock to send 3D mouse
 typedef ros::WallTimer TimerStepCommand; // Use wallclock to send a step command
 typedef ros::WallDuration DurationStepCommand; // Use wallclock to send a step command
+
+namespace mavplugin {
 
 class SkyeSetpoint6DofPlugin : public MavRosPlugin {
 public:
@@ -90,6 +90,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;

@@ -40,12 +40,14 @@ namespace mavplugin {
 
 class SkyeAllocationOutputIdPlugin : public MavRosPlugin {
 public:
+//-----------------------------------------------------------------------------
   SkyeAllocationOutputIdPlugin() :
     nh_private("~"),
     nh_public(),
     uas(nullptr)
   { };
 
+//-----------------------------------------------------------------------------
   /**
    * Plugin initializer. Constructor should not do this.
    */
@@ -70,6 +72,7 @@ public:
     allocator_out_msg.angle.resize(1, 0.0);
   }
 
+//-----------------------------------------------------------------------------
   /**
    * This function returns message<->handler mapping
    *
@@ -83,6 +86,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;

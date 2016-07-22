@@ -40,6 +40,7 @@ typedef ros::WallTime TimeAttitudeHil; // Use wallclock to send attitude hil
 namespace mavplugin {
 
 class SkyeAttitudeHilPlugin : public MavRosPlugin {
+//-----------------------------------------------------------------------------
 public:
   SkyeAttitudeHilPlugin() :
     nh_private("~"),
@@ -47,7 +48,7 @@ public:
     uas(nullptr),
     attitude_hil_last_time(TimeAttitudeHil::now())
   { };
-
+//-----------------------------------------------------------------------------
   /**
    * Plugin initializer. Constructor should not do this.
    */
@@ -59,8 +60,6 @@ public:
     skye_ros_imu_sk_sub = nh_public.subscribe("skye_ros/sensor_msgs/imu_sk",
                                               10,
                                               &SkyeAttitudeHilPlugin::imu_sk_callback, this);
-
-
   }
 
 //-----------------------------------------------------------------------------
@@ -74,6 +73,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;
@@ -82,7 +82,7 @@ private:
   TimeAttitudeHil attitude_hil_last_time; /*< Last time attitude hil was sent to the FMU. */
 
 
-  //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
   /**
    * Custom function to obtain euler angles (rotation order ZYX) in local axis.
    * This function returns roll in (-pi,pi), pitch in (-pi/2,pi/2) and yaw in (-pi,pi).
@@ -95,7 +95,7 @@ private:
     yaw = atan2(2.0 * (q.w() * q.z() + q.x() * q.y()), 1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z()));
   }
 
-  //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
   /**
    * This function gets call when a new IMU message has been received
    */

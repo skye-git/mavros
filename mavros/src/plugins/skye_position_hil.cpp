@@ -41,6 +41,7 @@ namespace mavplugin {
 
 class SkyePositionHilPlugin : public MavRosPlugin {
 public:
+//-----------------------------------------------------------------------------
   SkyePositionHilPlugin() :
     nh_private("~"),
     nh_public(),
@@ -48,6 +49,7 @@ public:
     attitude_hil_last_time(TimePositionHil::now())
   { };
 
+//-----------------------------------------------------------------------------
   /**
    * Plugin initializer. Constructor should not do this.
    */
@@ -75,6 +77,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;
@@ -83,7 +86,7 @@ private:
   TimePositionHil attitude_hil_last_time; /*< Last time position hil was sent to the FMU. */
 
 
-  //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
   void ground_truth_callback(const gazebo_msgs::LinkStateConstPtr &ground_truth){
 
     // Should we send the message now or wait a little bit more?

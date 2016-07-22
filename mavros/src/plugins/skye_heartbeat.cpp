@@ -75,6 +75,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh;
   UAS *uas;
   bool received_first_heartbit;

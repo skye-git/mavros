@@ -36,12 +36,14 @@ namespace mavplugin {
 
 class SkyePositionCtrlOutputPlugin : public MavRosPlugin {
 public:
+//-----------------------------------------------------------------------------
   SkyePositionCtrlOutputPlugin() :
     nh_private("~"),
     nh_public(),
     uas(nullptr)
   { };
 
+//-----------------------------------------------------------------------------
   /**
    * Plugin initializer. Constructor should not do this.
    */
@@ -66,6 +68,7 @@ public:
 
   }
 
+//-----------------------------------------------------------------------------
   /**
    * This function returns message<->handler mapping
    *
@@ -79,6 +82,7 @@ public:
   }
 
 private:
+//-----------------------------------------------------------------------------
   ros::NodeHandle nh_private;
   ros::NodeHandle nh_public;
   UAS *uas;
