@@ -126,3 +126,7 @@ You can different models, specifying the command line parameter 'model_name', fo
 roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 model_name:=tetra
 ```
 
+####Messages exhange Scheme
+<p align="center">
+  <img src="mavros/doc/hil_messages_scheme.png" width="650"/>
+</p>
