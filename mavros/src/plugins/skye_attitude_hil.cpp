@@ -30,7 +30,12 @@
 #include <mavros/mavros_plugin.h>
 
 #include <pluginlib/class_list_macros.h>
+#include <mavros/skye_common_helpers.h>
 #include <sensor_msgs/Imu.h>
+
+//settings
+const double kAttitudeHilSendingFrequency = 25.0; // [Hz]
+typedef ros::WallTime TimeAttitudeHil; // Use wallclock to send attitude hil
 
 namespace mavplugin {
 
@@ -39,7 +44,8 @@ public:
   SkyeAttitudeHilPlugin() :
     nh_private("~"),
     nh_public(),
-    uas(nullptr)
+    uas(nullptr),
+    attitude_hil_last_time(TimeAttitudeHil::now())
   { };
 
   /**
@@ -73,6 +79,7 @@ private:
   UAS *uas;
 
   ros::Subscriber skye_ros_imu_sk_sub; /* IMU topic in Skye's IMU frame. */
+  TimeAttitudeHil attitude_hil_last_time; /*< Last time attitude hil was sent to the FMU. */
 
 
   //-----------------------------------------------------------------------------
@@ -94,43 +101,47 @@ private:
    */
   void imu_sk_callback(const sensor_msgs::ImuConstPtr &imu_sk_p) {
 
-    mavlink_message_t msg;
-    Eigen::Quaterniond q_imu;
-    float roll, pitch, yaw;
-    float rollspeed, pitchspeed, yawspeed;
-    float q[4];
+    // Should we send the message now or wait a little bit more?
+    if (publish_now(attitude_hil_last_time, kAttitudeHilSendingFrequency)) {
 
-    // Convert data to fullfill a mavlink message
-    q_imu.w() = imu_sk_p->orientation.w;
-    q_imu.x() = imu_sk_p->orientation.x;
-    q_imu.y() = imu_sk_p->orientation.y;
-    q_imu.z() = imu_sk_p->orientation.z;
+      mavlink_message_t msg;
+      Eigen::Quaterniond q_imu;
+      float roll, pitch, yaw;
+      float rollspeed, pitchspeed, yawspeed;
+      float q[4];
 
-    // Convert quaternion to euler angles
-    skye_quat_to_eu(q_imu, roll, pitch, yaw);
+      // Convert data to fullfill a mavlink message
+      q_imu.w() = imu_sk_p->orientation.w;
+      q_imu.x() = imu_sk_p->orientation.x;
+      q_imu.y() = imu_sk_p->orientation.y;
+      q_imu.z() = imu_sk_p->orientation.z;
 
-    rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
-    pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
-    yawspeed = static_cast<float>(imu_sk_p->angular_velocity.z);
+      // Convert quaternion to euler angles
+      skye_quat_to_eu(q_imu, roll, pitch, yaw);
 
-    q[0] = static_cast<float>(q_imu.w());
-    q[1] = static_cast<float>(q_imu.x());
-    q[2] = static_cast<float>(q_imu.y());
-    q[3] = static_cast<float>(q_imu.z());
+      rollspeed = static_cast<float>(imu_sk_p->angular_velocity.x);
+      pitchspeed = static_cast<float>(imu_sk_p->angular_velocity.y);
+      yawspeed = static_cast<float>(imu_sk_p->angular_velocity.z);
 
-    uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+      q[0] = static_cast<float>(q_imu.w());
+      q[1] = static_cast<float>(q_imu.x());
+      q[2] = static_cast<float>(q_imu.y());
+      q[3] = static_cast<float>(q_imu.z());
 
-    // Send the skye_attitude_hil message to Skye
-    mavlink_msg_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                       timestamp,
-                                       roll,
-                                       pitch,
-                                       yaw,
-                                       rollspeed,
-                                       pitchspeed,
-                                       yawspeed,
-                                       q);
-    UAS_FCU(uas)->send_message(&msg);
+      uint64_t timestamp = static_cast<uint64_t>(ros::Time::now().toNSec() / 1000.0); // in uSec
+
+      // Send the skye_attitude_hil message to Skye
+      mavlink_msg_attitude_hil_pack_chan(UAS_PACK_CHAN(uas), &msg,
+                                         timestamp,
+                                         roll,
+                                         pitch,
+                                         yaw,
+                                         rollspeed,
+                                         pitchspeed,
+                                         yawspeed,
+                                         q);
+      UAS_FCU(uas)->send_message(&msg);
+    }
   }
 
 
