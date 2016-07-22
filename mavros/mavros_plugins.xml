@@ -85,6 +85,10 @@
     <description>Read position_ctrl_output mavlink message, received from the FMU, and publishes it in ROS.
     If the allocation output is not used, then applies the requestes force to the center of the Hull.</description>
   </class>
+  <class name="skye_allocation_output_id" type="mavplugin::SkyeAllocationOutputIdPlugin" base_class_type="mavplugin::MavRosPlugin">
+    <description>Read allocation_output_id mavlink message, received from the FMU, and publishes
+    it in ROS. If allocation output is used, then applies the 2D force requests to the AUs.</description>
+  </class>
   <class name="skye_setpoint_6dof" type="mavplugin::SkyeSetpoint6DofPlugin" base_class_type="mavplugin::MavRosPlugin">
     <description>Send 3D mouse inputs to the FMU, using the mavlink message setpoint_6dof.</description>
   </class>

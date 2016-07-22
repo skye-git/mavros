@@ -127,6 +127,7 @@ add_library(mavros_plugins
   src/plugins/skye_position_hil.cpp #Skye
   src/plugins/skye_attitude_ctrl_output.cpp #Skye
   src/plugins/skye_position_ctrl_output.cpp #Skye
+  src/plugins/skye_allocation_output_id.cpp #Skye
   src/plugins/skye_heartbeat.cpp #Skye
   src/plugins/skye_setpoint_6dof.cpp #Skye
   src/plugins/skye_helper_services.cpp #Skye
