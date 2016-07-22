@@ -69,7 +69,7 @@ public:
                                 this);
 
     // Advertise topic where final 3D mouse inputs, sent to the FMU, are displayed
-    setpoint_6dof_pub = nh_private.advertise<geometry_msgs::Twist>("setpoint_6dof",
+    setpoint_6dof_pub = nh_private.advertise<geometry_msgs::Twist>("skye/setpoint_6dof",
                                                                    10);
 
     // Advertise service to send a step command for limited amount fo time

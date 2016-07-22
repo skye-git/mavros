@@ -56,17 +56,17 @@ public:
     uas = &uas_;
 
     // Service to set POC_C_MOD parameter on the FMU
-    set_c_mod_pos_srv = nh_private.advertiseService("skye_mr/set_pos_c_mod",
+    set_c_mod_pos_srv = nh_private.advertiseService("skye/set_pos_c_mod",
                                                     &SkyeHelperServicesPlugin::set_pos_c_mod,
                                                     this);
 
     // Service to set ATT_C_MOD parameter on the FMU
-    set_c_mod_att_srv = nh_private.advertiseService("skye_mr/set_att_c_mod",
+    set_c_mod_att_srv = nh_private.advertiseService("skye/set_att_c_mod",
                                                     &SkyeHelperServicesPlugin::set_att_c_mod,
                                                     this);
 
     // Service to set a generic parameter on the FMU
-    set_skye_param_srv = nh_private.advertiseService( "skye_mr/set_param",
+    set_skye_param_srv = nh_private.advertiseService( "skye/set_param",
                                                       &SkyeHelperServicesPlugin::set_skye_param,
                                                       this);
   }
