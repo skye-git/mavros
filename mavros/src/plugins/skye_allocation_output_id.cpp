@@ -138,13 +138,11 @@ private:
         au_force_2D_pub = search_au->second;
       } else {
         // It's the first time we received this AU id, advertise related topic
-        ROS_INFO("--------------- au_id: %d", au_id);// TODO delete me
         std::string au_name("au_" + std::to_string(au_id + 1)); // Au names start from 1
         au_force_2D_pub = nh_public.advertise<geometry_msgs::Vector3>(
                                   "skye_gz/" + au_name + "/force_desired",
                                   10);
 
-        ROS_INFO_STREAM("--------------- advertise: skye_gz/" + au_name + "/force_desired");// TODO delete me
         // Store publisher
         map_au_pubs.emplace(au_id, au_force_2D_pub);
       }
