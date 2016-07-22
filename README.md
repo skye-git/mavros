@@ -66,7 +66,7 @@ Now you're ready to get a copy of the source file of mavlink package.
 **Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/indigo-devel)
 ```bash
 cd ~/catkin_ws
-git clone git@github.com:skye-git/mavlink.git -b skye_pixracer_porting_ros #TODO update me with master once merged
+git clone git@github.com:skye-git/mavlink.git -b sw_restyling #TODO update me with master once merged
 ```
 It is conviniente to source the setup.* file
 ```bash
@@ -76,7 +76,7 @@ Now you can download the mavros package and sapcenav drivers and compile them.
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
-git clone https://github.com/skye-git/mavros -b indigo-devel
+git clone https://github.com/skye-git/mavros -b sw_restyling #TODO update me with master once merged
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
  #compile using skye dialect from mavlink package
@@ -99,19 +99,20 @@ roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200
 In the above example Mavlink is using USB0. This launch files starts Gazebo in pause. You can press the "play" button whenever you are ready to start the simulation.
 
 ####Changing Firmware Parameter
-During HIL simulation it is not possible to change onboard paramters via QGroundControl. The above list of services show how to change onboard parameters.
+During HIL simulation it is not possible to change onboard paramters via QGroundControl. The below list of services shows how to change onboard parameters.
 
-  * /skye_mr/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF), 3 (6DOFI), 4 (SKYE_ATT_C_MOD_GEOM), 5 (SKYE_ATT_C_MOD_MAX);
-  * /skye_mr/set_pos_c_mod sets the position control mode. Possible values: 0 (Manual), 1 (cascade pid);
-  * /skye_mr/set_param to set any onboard parameters, either if it's integer or float.
+  * /mavros/skye/set_att_c_mod sets the attitude control mode. Possible values: 0 (Manual), 1 (5DOF), 2 (6DOF), 3 (6DOFI), 4 (SKYE_ATT_C_MOD_GEOM), 5 (SKYE_ATT_C_MOD_MAX);
+  * /mavros/skye/set_pos_c_mod sets the position control mode. Possible values: 0 (Manual), 1 (cascade pid);
+  * /mavros/skye/set_param sets a generic parameter in the FMU;
+  * /mavros/skye/send_step_setpoint_6dof send a specified step command for the specified duration to the FMU.
   
 Examples:
 
 ```bash
-rosservice call /skye_mr/set_att_c_mod 0
-rosservice call /skye_mr/set_pos_c_mod 1
-rosservice call /skye_mr/set_param 'INTEGER_PARAM_NAME' '[PARAM_VALUE, 0.0]'
-rosservice call /skye_mr/set_param 'FLOAT_PARAM_NAME' '[0, PARAM_VALUE]'
+rosservice call /mavros/skye/set_att_c_mod 0
+rosservice call /mavros/skye/set_pos_c_mod 1
+rosservice call /mavros/skye/set_param 'INTEGER_PARAM_NAME' '[PARAM_VALUE, 0.0]'
+rosservice call /mavros/skye/set_param 'FLOAT_PARAM_NAME' '[0, PARAM_VALUE]'
 ```
 ####Testing Allocator Output
 By default option the outputs of the attitude and position controllers are directly applied to the center of gravity of the hull. If you want to test the allocator output and apply a 2D force in each AU, then you can type
@@ -120,8 +121,8 @@ roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 use_allocator_outp
 ```
 
 ####Selecting Skye's Model 
-You can use the URDF model (it's exactly the same of the SDF one, it allows only more option when used in Rviz) by typing
+You can different models, specifying the command line parameter 'model_name', for instance:
 ```bash
-roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 use_urdf:=true
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 model_name:=tetra
 ```
 
