@@ -121,8 +121,6 @@ add_library(mavros_plugins
 #  src/plugins/actuator_control.cpp
 #  src/plugins/manual_control.cpp
 #  src/plugins/altitude.cpp
-  #src/plugins/skye_talker.cpp #Skye
-  #src/plugins/skye_listener.cpp #Skye
   src/plugins/skye_attitude_hil.cpp #Skye
   src/plugins/skye_position_hil.cpp #Skye
   src/plugins/skye_attitude_ctrl_output.cpp #Skye
