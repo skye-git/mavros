@@ -56,8 +56,8 @@ public:
   {
     uas = &uas_;
 
-    // Subscriber to IMU topic with NED convention
-    skye_ros_imu_sk_sub = nh_public.subscribe("skye_ros/sensor_msgs/imu_sk",
+    // Subscriber to NOISELESS IMU topic with NED convention
+    skye_ros_imu_sk_sub = nh_public.subscribe("skye_ros/sensor_msgs/imu_sk_noiseless",
                                               10,
                                               &SkyeAttitudeHilPlugin::imu_sk_callback, this);
   }
