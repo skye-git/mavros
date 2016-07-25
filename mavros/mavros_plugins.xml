@@ -98,6 +98,9 @@
   <class name="skye_accelerometers_services" type="mavplugin::SkyeAccelerometersHilPlugin" base_class_type="mavplugin::MavRosPlugin">
     <description>Read noisy accelerometers from ROS IMU message and send it to the FMU.</description>
   </class>
+  <class name="skye_gyroscopes_services" type="mavplugin::SkyeGyroscopesHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+    <description>Read noisy gyroscopes from ROS IMU message and send it to the FMU.</description>
+  </class>
 
 </library>
 
