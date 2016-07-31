@@ -20,6 +20,10 @@ find_package(catkin REQUIRED COMPONENTS
   rosconsole_bridge
   eigen_conversions
   mavros_msgs
+  skye_ros #Skye - ROS interface
+  skye_msgs #Skye - Messages
+  mavlink #Skye - custom mavlink package
+  spacenav_node # Skye - 3Dconnexion ros package to read 3D mouse inputs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -56,7 +60,7 @@ catkin_python_setup()
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mavros
-  CATKIN_DEPENDS diagnostic_msgs diagnostic_updater pluginlib roscpp sensor_msgs nav_msgs std_msgs tf2_ros geometry_msgs libmavconn message_runtime eigen_conversions mavros_msgs
+  CATKIN_DEPENDS diagnostic_msgs diagnostic_updater pluginlib roscpp sensor_msgs nav_msgs std_msgs tf2_ros geometry_msgs libmavconn message_runtime eigen_conversions mavros_msgs skye_msgs
   DEPENDS Boost Eigen
 )
 
@@ -87,7 +91,7 @@ target_link_libraries(mavros
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
-add_dependencies(mavros mavros_msgs_generate_messages_cpp)
+add_dependencies(mavros mavros_msgs_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_library(mavros_plugins
   src/plugins/dummy.cpp
