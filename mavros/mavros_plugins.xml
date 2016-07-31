@@ -78,5 +78,8 @@
       <description>Once the first heartbeat has been received from the FMU, send the HIL flag and enable
       all the AUs.</description>
   </class>
+  <class name="skye_accelerometers_hil" type="mavplugin::SkyeAccelerometersHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read noisy accelerometers from ROS IMU message and send it to the FMU.</description>
+  </class>
 </library>
 

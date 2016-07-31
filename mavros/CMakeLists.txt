@@ -121,6 +121,7 @@ add_library(mavros_plugins
   src/plugins/skye_attitude_hil.cpp
   src/plugins/skye_position_hil.cpp
   src/plugins/skye_heartbeat.cpp
+  src/plugins/skye_accelerometers_hil.cpp
 )
 add_dependencies(mavros_plugins
   mavros
