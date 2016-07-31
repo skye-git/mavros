@@ -2,7 +2,7 @@
 	<!--<class name="dummy" type="mavplugin::DummyPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Dummy test plugin.</description>
 	</class>-->
-	<class name="sys_status" type="mavplugin::SystemStatusPlugin" base_class_type="mavplugin::MavRosPlugin">
+<!--	<class name="sys_status" type="mavplugin::SystemStatusPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish system status.</description>
 	</class>
 	<class name="imu_pub" type="mavplugin::IMUPubPlugin" base_class_type="mavplugin::MavRosPlugin">
@@ -67,6 +67,9 @@
 	</class>
         <class name="hil_controls" type="mavplugin::HilControlsPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish HIL controls values</description>
-	</class>
+  </class>-->
+  <class name="skye_attitude_hil" type="mavplugin::SkyeAttitudeHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read attitude from ROS IMU message and send it to the FMU. </description>
+    </class>
 </library>
 
