@@ -8,6 +8,9 @@
 	<arg name="tgt_component" default="1" />
 	<arg name="log_output" default="screen" />
 
+  <arg name="use_allocator_output" default="false"/> <!-- Skye -->
+  <arg name="model_name" default="tetra"/> <!-- Skye -->
+
 	<include file="$(find mavros)/launch/node.launch">
 		<arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
 		<arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
@@ -17,5 +20,9 @@
 		<arg name="tgt_system" value="$(arg tgt_system)" />
 		<arg name="tgt_component" value="$(arg tgt_component)" />
 		<arg name="log_output" value="$(arg log_output)" />
+
+    <arg name="use_allocator_output" value="$(arg use_allocator_output)" /> <!-- Skye -->
+    <arg name="model_name" value="$(arg model_name)" /> <!-- Skye -->
+
 	</include>
 </launch>
