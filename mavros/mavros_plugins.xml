@@ -87,5 +87,9 @@
   <class name="skye_setpoint_6dof" type="mavplugin::SkyeSetpoint6DofPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Send 3D mouse inputs to the FMU, using the mavlink message setpoint_6dof.</description>
   </class>
+  <class name="skye_attitude_ctrl_output" type="mavplugin::SkyeAttitudeCtrlOutputPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read attitude_ctrl_output mavlink message, received from the FMU, and publishes it in ROS.
+      If the allocation output is not used, then applies the requestes torque to the center of the Hull.</description>
+  </class>
 </library>
 
