@@ -94,5 +94,9 @@
   <class name="skye_helper_services" type="mavplugin::SkyeHelperServicesPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Common useful services to intercat with the FMU.</description>
   </class>
+  <class name="skye_position_ctrl_output" type="mavplugin::SkyePositionCtrlOutputPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read position_ctrl_output mavlink message, received from the FMU, and publishes it in ROS.
+      If the allocation output is not used, then applies the requestes force to the center of the Hull.</description>
+  </class>
 </library>
 

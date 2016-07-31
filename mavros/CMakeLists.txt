@@ -126,6 +126,7 @@ add_library(mavros_plugins
   src/plugins/skye_setpoint_6dof.cpp
   src/plugins/skye_attitude_ctrl_output.cpp
   src/plugins/skye_helper_services.cpp
+  src/plugins/skye_position_ctrl_output.cpp
 )
 add_dependencies(mavros_plugins
   mavros
