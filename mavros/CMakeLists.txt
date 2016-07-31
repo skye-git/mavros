@@ -123,6 +123,7 @@ add_library(mavros_plugins
   src/plugins/skye_heartbeat.cpp
   src/plugins/skye_accelerometers_hil.cpp
   src/plugins/skye_gyroscopes_hil.cpp
+  src/plugins/skye_setpoint_6dof.cpp
 )
 add_dependencies(mavros_plugins
   mavros

@@ -84,5 +84,8 @@
   <class name="skye_gyroscopes_hil" type="mavplugin::SkyeGyroscopesHilPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Read noisy gyroscopes from ROS IMU message and send it to the FMU.</description>
   </class>
+  <class name="skye_setpoint_6dof" type="mavplugin::SkyeSetpoint6DofPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Send 3D mouse inputs to the FMU, using the mavlink message setpoint_6dof.</description>
+  </class>
 </library>
 
