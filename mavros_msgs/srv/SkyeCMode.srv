@@ -1,0 +1,5 @@
+# Request set SKYE_C_MODE parameter
+
+uint8 mode #MANUAL, 5DOF, 6DOF. see mavlink/skye.h
+---
+bool success
