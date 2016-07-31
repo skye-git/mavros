@@ -7,7 +7,7 @@
 	</class>
 	<class name="imu_pub" type="mavplugin::IMUPubPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish IMU data.</description>
-	</class>
+  </class>
 	<class name="param" type="mavplugin::ParamPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Access to FCU parameters.</description>
 	</class>
@@ -90,6 +90,9 @@
   <class name="skye_attitude_ctrl_output" type="mavplugin::SkyeAttitudeCtrlOutputPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Read attitude_ctrl_output mavlink message, received from the FMU, and publishes it in ROS.
       If the allocation output is not used, then applies the requestes torque to the center of the Hull.</description>
+  </class>
+  <class name="skye_helper_services" type="mavplugin::SkyeHelperServicesPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Common useful services to intercat with the FMU.</description>
   </class>
 </library>
 
