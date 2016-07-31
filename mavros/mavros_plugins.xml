@@ -70,6 +70,9 @@
   </class>-->
   <class name="skye_attitude_hil" type="mavplugin::SkyeAttitudeHilPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Read attitude from ROS IMU message and send it to the FMU. </description>
-    </class>
+  </class>
+  <class name="skye_position_hil" type="mavplugin::SkyePositionHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read hull ground truth from ROS message and send it to the FMU. </description>
+  </class>
 </library>
 

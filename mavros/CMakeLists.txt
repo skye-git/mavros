@@ -118,6 +118,7 @@ add_library(mavros_plugins
 #  src/plugins/altitude.cpp
 #  src/plugins/hil_controls.cpp
   src/plugins/skye_attitude_hil.cpp
+  src/plugins/skye_position_hil.cpp
 )
 add_dependencies(mavros_plugins
   mavros
