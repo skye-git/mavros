@@ -40,7 +40,7 @@ class SkyeHeartbeatPlugin : public MavRosPlugin {
 public:
 //-----------------------------------------------------------------------------
   SkyeHeartbeatPlugin() :
-    nh("~"),
+    nh_private("~"),
     uas(nullptr),
     received_first_heartbit(false)
   { };
@@ -61,6 +61,8 @@ public:
   {
     uas = &uas_;
 
+    // Check if we should request high frequency stream of allocator output
+    nh_private.param<bool>("use_allocator_output", use_allocator_output, false);
   }
 
 //-----------------------------------------------------------------------------
@@ -78,23 +80,38 @@ public:
 
 private:
 //-----------------------------------------------------------------------------
-  ros::NodeHandle nh;
+  ros::NodeHandle nh_private;
   UAS *uas;
   bool received_first_heartbit;
+  bool use_allocator_output; /*< Indicates if we should request for high stream frequency of alloc output.*/
 
 //-----------------------------------------------------------------------------
   /**
    * This function gets call when we want to set HIL mode in the FMU
    */
   void set_hil_mode(bool hil_on) {
+
+    int param_value;
+    std::string msg;
+
     if(hil_on){
-        set_parameter(uas, "SKYE_HIL_MODE", 1);
-        ROS_INFO_STREAM("[" << kMyNameWhenPrintg << "] set HIL mode to 1");
+        msg = "[" + kMyNameWhenPrintg + "] set HIL mode to 1";
+
+        if (use_allocator_output) {
+          param_value = SKYE_HIL_ON_AND_HIGH_ALLOCATOR_OUTPUT_STREAM;
+          msg + " and requested high streaming frequency of alloc. output";
+        } else {
+          param_value = SKYE_HIL_ON_AND_LOW_ALLOCATOR_OUTPUT_STREAM;
+          msg + " and requested high streaming frequency of attitude and position ctrl. output";
+        }
       }
     else{
-        set_parameter(uas, "SKYE_HIL_MODE", 0);
-        ROS_INFO_STREAM("[" << kMyNameWhenPrintg << "] set HIL mode to 0");
+        param_value = SKYE_HIL_OFF;
+        msg = "[" + kMyNameWhenPrintg + "] set HIL mode to 0";
       }
+
+    set_parameter(uas, "SKYE_HIL_CONF", param_value);
+    ROS_INFO_STREAM(msg);
 
   }
 
