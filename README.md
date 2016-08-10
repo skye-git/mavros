@@ -54,36 +54,37 @@ We'd like to keep the project bugtracker as free as possible, so please contact 
 It is possible to test Skye's firmware with a hardware in the loop simulation using mavros as a link between mavlink and ros-gazebo. The current tutorial has been tested with ROS Indigo.
 
 ### Requirements
-Please follow the ReadMe tutorial of [skye_gazebo_simulation](https://github.com/skye-git/skye_gazebo_simulation) before proceding with the installation of mavros.
+The following repositories are required in the catkin space where mavros is going to be installed: skye_gazebo_simulation and mavlink. You are going to install mavlink with the following instruction, and it is assumed that you have already installed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil).
 
 ### Mavlink-ROS Package And Skye Dialect
-You will be using the ROS python tools wstool, rosinstall,and catkin_tools for this installation. While they may have been installed during your installation of ROS you can also install them with:
+You will be using the ROS python tools wstool, rosinstall, and catkin_tools for this installation. While they may have been installed during your installation of ROS you can also install them with:
 ```bash 
 sudo apt-get install python-wstool python-rosinstall-generator python-catkin-tools
 ```
 Now you're ready to get a copy of the source file of mavlink package.
 
-**Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/indigo-devel)
+**Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil)
 ```bash
 cd ~/catkin_ws
-git clone git@github.com:skye-git/mavlink.git -b sw_restyling #TODO update me with master once merged
-```
-It is conviniente to source the setup.* file
-```bash
-source ~/catkin_ws/devel/setup.sh
+git clone git@github.com:skye-git/mavlink.git -b https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil
 ```
 Now you can download the mavros package and sapcenav drivers and compile them. 
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
-git clone https://github.com/skye-git/mavros -b sw_restyling #TODO update me with master once merged
+git clone https://github.com/skye-git/mavros -b px4fmu/hil
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
  #compile using skye dialect from mavlink package
 catkin build --cmake-args -DMAVLINK_DIALECT=skye
 ```
 
-**Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must pull the latest files into the mavlink folder and tehn compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect everytime you compile the mavlink repo used by mavros.
+It is conviniente to source the setup.* file
+```bash
+source ~/catkin_ws/devel/setup.sh
+```
+
+**Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must pull the latest files into the mavlink folder and then compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect, with the option '--cmake-args -DMAVLINK_DIALECT=skye', everytime you compile mavros.
 
 #### Troubleshooting
 In case of `CMake Error: Could not find a package configuration file provided by "control_toolbox"`, please install the following packages:
@@ -94,9 +95,10 @@ sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
 ###Usage
 To launch the HIL simulation identify to which USB port Mavlink is communicating and then type in a new terminal
 ```bash
-roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600
 ```
-In the above example Mavlink is using USB0. This launch files starts Gazebo in pause. You can press the "play" button whenever you are ready to start the simulation.
+In the above example Mavlink is using USB0 and a baud rate of 921600. This launch file starts Gazebo in pause. You can press the "play" button whenever you are ready to start the simulation.
+After the play button is pressed, a hil enabling message is sent to the FMU by mavros as soon as a heartbeat message is received from the FMU.
 
 ####Changing Firmware Parameter
 During HIL simulation it is not possible to change onboard paramters via QGroundControl. The below list of services shows how to change onboard parameters.
@@ -117,13 +119,13 @@ rosservice call /mavros/skye/set_param 'FLOAT_PARAM_NAME' '[0, PARAM_VALUE]'
 ####Testing Allocator Output
 By default option the outputs of the attitude and position controllers are directly applied to the center of gravity of the hull. If you want to test the allocator output and apply a 2D force in each AU, then you can type
 ```bash
-roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 use_allocator_output:=true
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600 use_allocator_output:=true
 ```
 
 ####Selecting Skye's Model 
 You can different models, specifying the command line parameter 'model_name', for instance:
 ```bash
-roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:115200 model_name:=tetra
+roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600 model_name:=tetra
 ```
 
 ####Messages exhange Scheme
