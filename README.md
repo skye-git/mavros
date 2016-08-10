@@ -51,7 +51,7 @@ We'd like to keep the project bugtracker as free as possible, so please contact 
 
 
 ## Skye Hardware In The Loop
-It is possible to test Skye's firmware with a hardware in the loop simulation using mavros as a link between mavlink and ros-gazebo. The current tutorial has been tested with ROS Indigo.
+It is possible to test Skye's firmware with a hardware in the loop (HIL) simulation using mavros as a link between mavlink and ros-gazebo. The current tutorial has been tested with ROS Indigo.
 
 ### Requirements
 The following repositories are required in the catkin space where mavros is going to be installed: skye_gazebo_simulation and mavlink. You are going to install mavlink with the following instruction, and it is assumed that you have already installed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil).
