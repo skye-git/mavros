@@ -74,7 +74,7 @@ public:
 
     // Advertise service to send a step command for limited amount fo time
     send_step_srv = nh_private.advertiseService(
-                              "send_step_setpoint_6dof",
+                              "skye/send_step_setpoint_6dof",
                               &SkyeSetpoint6DofPlugin::send_step_setpoint_6dof,
                               this);
   }
