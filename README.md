@@ -54,7 +54,7 @@ We'd like to keep the project bugtracker as free as possible, so please contact 
 It is possible to test Skye's firmware with a hardware in the loop (HIL) simulation using mavros as a link between mavlink and ros-gazebo. The current tutorial has been tested with ROS Indigo.
 
 ### Requirements
-The following repositories are required in the catkin space where mavros is going to be installed: skye_gazebo_simulation and mavlink. You are going to install mavlink with the following instruction, and it is assumed that you have already installed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil).
+The following repositories are required in the catkin space where mavros is going to be installed: skye_gazebo_simulation and mavlink. You are going to install mavlink with the following instructions, and it is assumed that you have already installed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil).
 
 ### Mavlink-ROS Package And Skye Dialect
 You will be using the ROS python tools wstool, rosinstall, and catkin_tools for this installation. While they may have been installed during your installation of ROS you can also install them with:
@@ -66,7 +66,7 @@ Now you're ready to get a copy of the source file of mavlink package.
 **Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil)
 ```bash
 cd ~/catkin_ws
-git clone git@github.com:skye-git/mavlink.git -b https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil
+git clone git@github.com:skye-git/mavlink.git -b px4fmu/hil
 ```
 Now you can download the mavros package and sapcenav drivers and compile them. 
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
@@ -76,7 +76,7 @@ git clone https://github.com/skye-git/mavros -b px4fmu/hil
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
  #compile using skye dialect from mavlink package
-catkin build --cmake-args -DMAVLINK_DIALECT=skye
+catkin build -j8 --cmake-args -DMAVLINK_DIALECT=skye
 ```
 
 It is conviniente to source the setup.* file
@@ -123,11 +123,11 @@ roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600 use_allocator_outp
 ```
 
 ####Selecting Skye's Model 
-You can different models, specifying the command line parameter 'model_name', for instance:
+You can use different models, specifying the command line parameter 'model_name', for instance:
 ```bash
 roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600 model_name:=tetra
 ```
-
+Note: the firmware of the FMU should be change according to the model you want to use.
 ####Messages exhange Scheme
 <p align="center">
   <img src="mavros/doc/hil_messages_scheme.png" width="650"/>
