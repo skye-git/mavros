@@ -64,14 +64,11 @@ sudo apt-get install python-wstool python-rosinstall-generator python-catkin-too
 Now you're ready to get a copy of the source file of mavlink package.
 
 **Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil)
-```bash
-cd ~/catkin_ws
-git clone https://github.com:skye-git/mavlink.git -b px4fmu/hil
-```
 Now you can download the mavros package and sapcenav drivers and compile them. 
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
+git clone https://github.com:skye-git/mavlink.git -b px4fmu/hil
 git clone https://github.com/skye-git/mavros -b px4fmu/hil
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
