@@ -61,10 +61,12 @@ You will be using the ROS python tools wstool, rosinstall, and catkin_tools for 
 ```bash 
 sudo apt-get install python-wstool python-rosinstall-generator python-catkin-tools
 ```
-Now you're ready to get a copy of the source file of mavlink package.
-
+Before downloading the source files, you need to install the 3D mouse driver needed for the HIL:
+```
+sudo apt-get install spacenavd libspnav-dev
+```
+Now you're ready to get a copy of the source files.
 **Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil)
-Now you can download the mavros package and sapcenav drivers and compile them. 
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
