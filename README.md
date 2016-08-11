@@ -61,9 +61,10 @@ You will be using the ROS python tools wstool, rosinstall, and catkin_tools for 
 ```bash 
 sudo apt-get install python-wstool python-rosinstall-generator python-catkin-tools
 ```
-Before downloading the source files, you need to install the 3D mouse driver needed for the HIL:
+Before downloading the source files, you need to install a couple of additional thigs:
 ```
-sudo apt-get install spacenavd libspnav-dev
+sudo apt-get install spacenavd libspnav-dev  #3D mouse driver needed for the HIL
+sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
 ```
 Now you're ready to get a copy of the source files.
 **Warning**: you should have already created a catkin workspace named "catkin\_ws" when you followed [Skye Gazebo Simulation](https://github.com/skye-git/skye_gazebo_simulation/tree/px4fmu/hil)
@@ -84,12 +85,6 @@ source ~/catkin_ws/devel/setup.sh
 ```
 
 **Warning:** since mavros cannot use the [c_library](https://github.com/skye-git/c_library) repo directly, you must pull the latest files into the mavlink folder and then compile the mavlink repo again specifying the desired dialect. You must specify the skye dialect, with the option '--cmake-args -DMAVLINK_DIALECT=skye', everytime you compile mavros.
-
-#### Troubleshooting
-In case of `CMake Error: Could not find a package configuration file provided by "control_toolbox"`, please install the following packages:
-```bash
-sudo apt-get install ros-indigo-ros-control ros-indigo-ros-controllers
-```
 
 ###Usage
 To launch the HIL simulation identify to which USB port Mavlink is communicating and then type in a new terminal
