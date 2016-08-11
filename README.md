@@ -68,7 +68,7 @@ Now you can download the mavros package and sapcenav drivers and compile them.
 **Warning:** you must perfom the following actions in the same workspace used for the installation of "skye_gazebo_simulations", that is assumed to be "~/catkin_ws".
 ```bash
 cd ~/catkin_ws/src/
-git clone https://github.com:skye-git/mavlink.git -b px4fmu/hil
+git clone https://github.com/skye-git/mavlink.git -b px4fmu/hil
 git clone https://github.com/skye-git/mavros -b px4fmu/hil
 git clone https://github.com/skye-git/joystick_drivers
 cd ~/catkin_ws
