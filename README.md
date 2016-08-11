@@ -128,7 +128,7 @@ You can use different models, specifying the command line parameter 'model_name'
 roslaunch mavros skye_hil.launch fcu_url:=/dev/ttyUSB0:921600 model_name:=tetra
 ```
 Note: the firmware of the FMU should be change according to the model you want to use.
-####Messages exhange Scheme
+####Messages Exchange Scheme
 <p align="center">
   <img src="mavros/doc/hil_messages_scheme.png" width="650"/>
 </p>
