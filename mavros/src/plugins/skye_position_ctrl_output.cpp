@@ -113,7 +113,6 @@ private:
     if (!use_allocator_output) {
       body_force_requested_pub.publish(position_ctrl_output_msg);
     }
-
   }
 
 };

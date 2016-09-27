@@ -125,9 +125,17 @@ add_library(mavros_plugins
   src/plugins/skye_gyroscopes_hil.cpp
   src/plugins/skye_setpoint_6dof.cpp
   src/plugins/skye_attitude_ctrl_output.cpp
+  src/plugins/skye_attitude_ctrl_output_hil.cpp
   src/plugins/skye_helper_services.cpp
   src/plugins/skye_position_ctrl_output.cpp
+  src/plugins/skye_position_ctrl_output_hil.cpp
   src/plugins/skye_allocation_output_id.cpp
+  src/plugins/skye_uwb_sensor_raw_hil.cpp
+  src/plugins/skye_ekf_uwb_state.cpp
+  src/plugins/skye_ekf_uwb_state_variance.cpp
+  src/plugins/skye_ekf_uwb_state_variance.cpp
+  src/plugins/skye_setpoint_pose.cpp
+
 )
 add_dependencies(mavros_plugins
   mavros

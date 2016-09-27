@@ -68,6 +68,7 @@
         <class name="hil_controls" type="mavplugin::HilControlsPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Publish HIL controls values</description>
   </class>-->
+
   <class name="skye_attitude_hil" type="mavplugin::SkyeAttitudeHilPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Read attitude from ROS IMU message and send it to the FMU. </description>
   </class>
@@ -101,6 +102,24 @@
   <class name="skye_allocation_output_id" type="mavplugin::SkyeAllocationOutputIdPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Read allocation_output_id mavlink message, received from the FMU, and publishes
       it in ROS. If allocation output is used, then applies the 2D force requests to the AUs.</description>
+  </class>
+  <class name="skye_uwb_sensor_raw_hil" type="mavplugin::SkyeUWBSensorRawHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read raw UWB sensors measurements from ROS and send it to the FMU.</description>
+  </class>
+   <class name="skye_ekf_uwb_state" type="mavplugin::SkyeEKFUWBStatePlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read EKF UWB state from FMU and send it to ROS.</description>
+  </class>
+   <class name="skye_ekf_uwb_state_variance" type="mavplugin::SkyeEKFUWBStateVariancePlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Read EKF UWB state variance from FMU and send it to ROS.</description>
+  </class>
+     <class name="skye_position_ctrl_output_hil" type="mavplugin::SkyePositionCtrlOutputHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Send position control output in N from ROS to Skye's firmware running in PX4 Stack.</description>
+  </class>
+     <class name="skye_attitude_ctrl_output_hil" type="mavplugin::SkyeAttitudeCtrlOutputHilPlugin" base_class_type="mavplugin::MavRosPlugin">
+      <description>Send attitude control output in N.m from ROS to Skye's firmware running in PX4 Stack.</description>
+  </class>
+     <class name="skye_setpoint_pose" type="mavplugin::SkyeSetpointPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
+		<description>Send to Skye external pose setpoint in EDU.</description>
   </class>
 </library>
 
