@@ -134,7 +134,6 @@ add_library(mavros_plugins
   src/plugins/skye_ekf_uwb_state.cpp
   src/plugins/skye_ekf_uwb_state_variance.cpp
   src/plugins/skye_ekf_uwb_state_variance.cpp
-  src/plugins/skye_setpoint_pose.cpp
 
 )
 add_dependencies(mavros_plugins

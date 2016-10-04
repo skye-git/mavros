@@ -118,8 +118,5 @@
      <class name="skye_attitude_ctrl_output_hil" type="mavplugin::SkyeAttitudeCtrlOutputHilPlugin" base_class_type="mavplugin::MavRosPlugin">
       <description>Send attitude control output in N.m from ROS to Skye's firmware running in PX4 Stack.</description>
   </class>
-     <class name="skye_setpoint_pose" type="mavplugin::SkyeSetpointPositionPlugin" base_class_type="mavplugin::MavRosPlugin">
-		<description>Send to Skye external pose setpoint in EDU.</description>
-  </class>
 </library>
 
