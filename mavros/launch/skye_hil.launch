@@ -9,6 +9,7 @@
   <arg name="gui" default="true"/> 
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
+  <arg name="place_anchors" default="false"/>
 
   <arg name="use_allocator_output" default="false"/> <!-- Skye -->
 
@@ -23,6 +24,7 @@
     <arg name="headless" value="$(arg headless)"/>
     <arg name="debug" value="$(arg debug)"/>
     <arg name="model_name" value="$(arg model_name)"/>
+    <arg name="place_anchors" value="$(arg place_anchors)"/>
   </include>
 
   <!-- Include spacenav_nod for 3d mouse -->
