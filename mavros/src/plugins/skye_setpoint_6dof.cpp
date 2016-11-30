@@ -117,27 +117,27 @@ private:
     if (publish_now(user_3d_mouse_last_time, kUser3DMouseSendingFrequency)) {
 
       mavlink_message_t msg;
-      float linear_x, linear_y, linear_z; // linear velocities
-      float angular_x, angular_y, angular_z; // angular velocities
+      int16_t linear_x, linear_y, linear_z; // linear velocities
+      int16_t angular_x, angular_y, angular_z; // angular velocities
 
-      linear_x = static_cast<float>(twist.linear.x);
-      linear_y = static_cast<float>(twist.linear.y);
-      linear_z = static_cast<float>(twist.linear.z);
-      angular_x = static_cast<float>(twist.angular.x);
-      angular_y = static_cast<float>(twist.angular.y);
-      angular_z = static_cast<float>(twist.angular.z);
+      linear_x = static_cast<int16_t>(twist.linear.x * 32767.0f);
+      linear_y = static_cast<int16_t>(twist.linear.y * 32767.0f);
+      linear_z = static_cast<int16_t>(twist.linear.z * 32767.0f);
+      angular_x = static_cast<int16_t>(twist.angular.x * 32767.0f);
+      angular_y = static_cast<int16_t>(twist.angular.y * 32767.0f);
+      angular_z = static_cast<int16_t>(twist.angular.z * 32767.0f);
 
       uint64_t timestamp = static_cast<uint64_t>(Time3dMouse::now().toNSec() / 1000.0); // in uSec
 
       /* Send the skye_attitude_hil message to Skye. */
       mavlink_msg_setpoint_6dof_pack_chan(UAS_PACK_CHAN(uas), &msg,
-                                          timestamp,
                                           linear_x,
                                           linear_y,
                                           linear_z,
                                           angular_x,
                                           angular_y,
-                                          angular_z);
+                                          angular_z,
+                                          timestamp);
 
       UAS_FCU(uas)->send_message(&msg);
 
