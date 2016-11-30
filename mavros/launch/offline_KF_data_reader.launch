@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
+  <arg name="gcs_url" default="udp://14555@localhost:14550"/>
+
+  <arg name="use_allocator_output" default="false"/> <!-- Skye -->
+
+  <!-- possible model names: tetra / enterprise_8aus / enterprise_6aus / enterprise_4aus / -->
+  <arg name="model_name" default="tetra"/>
+
+  <arg name="path" default="$(env PWD)"/>
+
+  <!-- Start offline KF data reader -->
+<include file="$(find offline_KF_data_reader)/launch/offline_KF_data_reader.launch">
+  <arg name="path" value="$(arg path)"/>
+  </include> 
+
+
+  <!-- Start "mavros_node" -->
+  <include file="$(find mavros)/launch/px4.launch">
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+    <arg name="gcs_url" value="$(arg gcs_url)" />
+    <arg name="use_allocator_output" value="$(arg use_allocator_output)" /> <!-- Skye -->
+    <arg name="model_name" value="$(arg model_name)" /> <!-- Skye -->
+  </include> 
+
+</launch>

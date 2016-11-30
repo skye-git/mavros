@@ -99,7 +99,6 @@ private:
                                          imu_sk_p->linear_acceleration.x,
                                          imu_sk_p->linear_acceleration.y,
                                          imu_sk_p->linear_acceleration.z);
-
       UAS_FCU(uas)->send_message(&msg);
     }
   }
